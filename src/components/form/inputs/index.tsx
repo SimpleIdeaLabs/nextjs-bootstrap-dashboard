@@ -90,7 +90,7 @@ function Input(props: InputProps) {
       );
 
     case 'select':
-      const { options, multiSelect = false } = props;
+      const { options = [], multiSelect = false } = props;
       return (
         <div className="mb-3">
           <label htmlFor="" className="form-label">

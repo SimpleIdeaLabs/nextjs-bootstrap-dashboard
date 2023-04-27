@@ -203,7 +203,9 @@ export default function UserRolesList() {
                         </td>
                         <td scope="row">{role.id}</td>
                         <td>{role.name}</td>
-                        <td>{role.userCount}</td>
+                        <td>
+                          <span className="badge rounded-pill text-bg-primary">{role.userCount}</span>
+                        </td>
                       </tr>
                     );
                   })}

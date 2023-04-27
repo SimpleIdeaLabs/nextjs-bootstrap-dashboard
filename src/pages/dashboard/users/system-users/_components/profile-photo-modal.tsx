@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Form, { FormBody, FormAction } from '../../../../../components/form';
 import { useDropzone } from 'react-dropzone';
+import { useMemo } from 'react';
 
 interface ProfilePhotoModalProps {
   profilePhoto: any;
@@ -23,16 +24,10 @@ const ProfilePhotoModal = (props: ProfilePhotoModalProps) => {
           preview: URL.createObjectURL(file),
         })
       );
-      console.log('objFiles', objFiles);
       onUpdateProfilePhoto(objFiles[0]);
+      onClose();
     },
   });
-
-  const files = acceptedFiles.map((file: any) => (
-    <li key={file.path}>
-      {file.path} - {file.size} bytes
-    </li>
-  ));
 
   return (
     <>
@@ -60,19 +55,9 @@ const ProfilePhotoModal = (props: ProfilePhotoModalProps) => {
                       <input {...getInputProps()} />
                       <p>Drag and drop some files here, or click to select files</p>
                     </div>
-                    <aside>
-                      <h4>Files</h4>
-                      <ul>{files}</ul>
-                    </aside>
                   </section>
                 </FormBody>
-                <FormAction>
-                  <div className="d-grid">
-                    <Link className="btn btn-primary btn-block" href="/dashboard/dashboard-analytics">
-                      Upload
-                    </Link>
-                  </div>
-                </FormAction>
+                <FormAction></FormAction>
               </Form>
             </div>
           </div>
@@ -83,7 +68,11 @@ const ProfilePhotoModal = (props: ProfilePhotoModalProps) => {
         style={{ display: showModal ? 'block' : 'none' }}></div>
       <style jsx>{`
         .dropzone {
-          border: 1px solid black;
+          border: none;
+          height: 200px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
         }
       `}</style>
     </>
