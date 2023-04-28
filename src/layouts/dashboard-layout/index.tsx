@@ -3,13 +3,14 @@ import { useEffect, useState } from 'react';
 import Accordion from './_components/accordion';
 import Cookies from 'js-cookie';
 import axios from 'axios';
-import { UserContext } from '../../context/user-context';
+import { UserContextProvider } from '../../context/user-context';
 import _ from 'lodash';
 import Link from 'next/link';
+import React from 'react';
 
 const DashboardLayout = (props: any) => {
-  const router = useRouter();
   const { children } = props;
+  const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
 
@@ -19,7 +20,7 @@ const DashboardLayout = (props: any) => {
         const token = Cookies.get('token');
         const {
           data: { data: responseData },
-        } = await axios.get(`${process.env.API_URL}/user/session`, {
+        } = await axios.get(`${process.env.API_URL}/user/current`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setCurrentUser(responseData);
@@ -42,7 +43,7 @@ const DashboardLayout = (props: any) => {
 
   return (
     <>
-      <UserContext.Provider value={currentUser}>
+      <UserContextProvider value={currentUser}>
         <>
           <nav className="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
             <div className="container-fluid">
@@ -90,7 +91,14 @@ const DashboardLayout = (props: any) => {
                   </li>
                   <li className="nav-item dropdown">
                     <a className="nav-link" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                      {_.get(currentUser, 'firstName', '')}
+                      {currentUser && (
+                        <img
+                          className="rounded-circle shadow border"
+                          src={`${process.env.FILE_UPLOADS_URL}/profile-photos/${currentUser.profilePhoto}`}
+                          alt="Avatar"
+                          style={{ width: '30px', height: '30px' }}
+                        />
+                      )}
                     </a>
                     <ul className="dropdown-menu dropdown-menu-end">
                       <li>
@@ -237,7 +245,7 @@ const DashboardLayout = (props: any) => {
               }
             `}</style>
         </>
-      </UserContext.Provider>
+      </UserContextProvider>
     </>
   );
 };

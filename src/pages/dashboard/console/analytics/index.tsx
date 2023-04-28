@@ -1,4 +1,3 @@
-import { title } from 'process';
 import { Breadcrumbs } from '../../../../components/breadcrumbs';
 import DashboardLayout from '../../../../layouts/dashboard-layout';
 import Hero from './_hero';

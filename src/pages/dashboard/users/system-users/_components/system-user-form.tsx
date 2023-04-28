@@ -147,7 +147,6 @@ export default function SystemUserForm(props: SystemUserFormProps) {
       toast.success(formProperties.successMessage);
       router.push(formProperties.successRedirect);
     } catch (error: unknown) {
-      console.log(error);
       handleHttpRequestError({
         error,
         badRequestCallback: (validationErrors: any) => {

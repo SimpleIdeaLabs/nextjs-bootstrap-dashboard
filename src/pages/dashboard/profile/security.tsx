@@ -1,5 +1,13 @@
-import DashboardLayout from '../../../layouts/dashboard-layout';
+import DashboardLayoutContainer from '../../../layouts/dashboard-layout';
+import _ from 'lodash';
+import ProfileSecurityPage from './_security';
 
-export default function Security() {
-  return <DashboardLayout>Security</DashboardLayout>;
+function ProfileSecurityContainer() {
+  return (
+    <DashboardLayoutContainer>
+      <ProfileSecurityPage />
+    </DashboardLayoutContainer>
+  );
 }
+
+export default ProfileSecurityContainer;
