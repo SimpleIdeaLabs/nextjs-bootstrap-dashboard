@@ -45,7 +45,7 @@ const DashboardLayout = (props: any) => {
     <>
       <UserContextProvider value={currentUser}>
         <>
-          <nav className="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+          <nav className="navbar navbar-expand-lg navbar-light bg-light fixed-top">
             <div className="container-fluid">
               <button type="button" className="navbar-toggler d-md-none" onClick={handleToggleSidebar}>
                 <i
@@ -130,9 +130,9 @@ const DashboardLayout = (props: any) => {
             <div className="row">
               {/* SideBar */}
               <nav
-                className={`col-md-3 col-lg-2 d-md-block ps-0 pe-0 bg-light sidebar ${
+                className={`col-md-3 col-lg-2 d-md-block ps-0 pe-0 bg-secondary sidebar ${
                   isSidebarOpen ? '' : 'collapse'
-                } border-end`}>
+                } border-end border-primary`}>
                 <div className="sidebar-sticky">
                   <div className="accordion accordion-flush" id="dashboardLink">
                     <Accordion
@@ -243,6 +243,7 @@ const DashboardLayout = (props: any) => {
               .btn-icon {
                 font-size: 24px;
               }
+
             `}</style>
         </>
       </UserContextProvider>

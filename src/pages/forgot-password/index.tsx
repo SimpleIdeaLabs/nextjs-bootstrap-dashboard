@@ -16,15 +16,13 @@ function ForgotPassword() {
                 label="Email"
                 id={''}
                 value={undefined}
-                onValueChange={function (value: any): void {
-                  throw new Error('Function not implemented.');
-                }}
+                onValueChange={function (value: any): void {}}
                 error={undefined}
               />
             </FormBody>
             <FormAction>
               <div className="d-grid gap-2 mb-3">
-                <Link className="btn btn-primary btn-block" href="/dashboard/dashboard-analytics">
+                <Link className="btn btn-outline-primary btn-block" href="/login">
                   Send Reset Link
                 </Link>
               </div>

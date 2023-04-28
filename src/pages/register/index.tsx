@@ -16,9 +16,7 @@ function Register() {
                 label="Email"
                 id={''}
                 value={undefined}
-                onValueChange={function (value: any): void {
-                  throw new Error('Function not implemented.');
-                }}
+                onValueChange={function (value: any): void {}}
                 error={undefined}
               />
               <Input
@@ -26,9 +24,7 @@ function Register() {
                 label="Password"
                 id={''}
                 value={undefined}
-                onValueChange={function (value: any): void {
-                  throw new Error('Function not implemented.');
-                }}
+                onValueChange={function (value: any): void {}}
                 error={undefined}
               />
               <Input
@@ -36,9 +32,7 @@ function Register() {
                 label="Confirm Password"
                 id={''}
                 value={undefined}
-                onValueChange={function (value: any): void {
-                  throw new Error('Function not implemented.');
-                }}
+                onValueChange={function (value: any): void {}}
                 error={undefined}
               />
               <Input
@@ -46,15 +40,13 @@ function Register() {
                 label="I agree to privacy policy terms."
                 id={''}
                 value={undefined}
-                onValueChange={function (value: any): void {
-                  throw new Error('Function not implemented.');
-                }}
+                onValueChange={function (value: any): void {}}
                 error={undefined}
               />
             </FormBody>
             <FormAction>
               <div className="d-grid gap-2 mb-3">
-                <Link className="btn btn-primary btn-block" href="/dashboard/dashboard-analytics">
+                <Link className="btn btn-outline-primary btn-block" href="/login">
                   Register
                 </Link>
               </div>

@@ -104,14 +104,14 @@ export default function UserRolesList() {
         <div className="mb-3 fs-6">Are you sure you want to delete this item?</div>
         <div className="d-flex justify-content-end">
           <button
-            className="btn btn-secondary me-2"
+            className="btn btn-outline-success me-2"
             onClick={() => {
               toast.dismiss('confirm');
             }}>
             No
           </button>
           <button
-            className="btn btn-danger"
+            className="btn btn-outline-danger"
             onClick={() => {
               toast.dismiss('confirm');
               sendDeleteRequest(roleId);
@@ -145,24 +145,24 @@ export default function UserRolesList() {
             },
             {
               title: 'Roles',
-              link: '/dashboard/users/roles',
+              link: '/dashboard/users/roles/list?page=1&limit=10',
               active: true,
             },
           ]}
         />
         <div className="row">
           <div className="col-lg-12">
-            <Table title="Roles">
+            <Table title="Roles" isLoading={false}>
               <TableHeader>
                 <h4 className="card-title mb-0">Roles</h4>
                 <div className="btn-group">
                   <button
                     id="btnRoleSearchModal"
-                    className="btn btn-secondary"
+                    className="btn btn-outline-primary"
                     onClick={() => setDisplaySearchModal(true)}>
                     <i className="bi bi-search"></i> Search
                   </button>
-                  <Link href="/dashboard/users/roles/create" className="btn btn-primary">
+                  <Link href="/dashboard/users/roles/create" className="btn btn-outline-success">
                     <i className="bi bi-plus-circle-fill"></i> New
                   </Link>
                 </div>
@@ -181,24 +181,22 @@ export default function UserRolesList() {
                     return (
                       <tr key={role.id}>
                         <td scope="row">
-                          <div className="btn-group">
-                            <button
-                              className="btn btn-light"
-                              type="button"
-                              id="triggerId"
-                              data-bs-toggle="dropdown"
-                              aria-haspopup="true"
-                              aria-expanded="false">
-                              <i className="bi bi-three-dots-vertical"></i>
+                          <button
+                            className="btn btn-sm btn-light"
+                            type="button"
+                            id="triggerId"
+                            data-bs-toggle="dropdown"
+                            aria-haspopup="true"
+                            aria-expanded="false">
+                            <i className="bi bi-three-dots-vertical"></i>
+                          </button>
+                          <div className="dropdown-menu dropdown-menu-start" aria-labelledby="triggerId">
+                            <Link className="dropdown-item" href={`/dashboard/users/roles/${role.id}`}>
+                              <i className="bi bi-pen-fill text-info"></i> Edit
+                            </Link>
+                            <button className="dropdown-item" onClick={() => handleDelete(role.id)}>
+                              <i className="bi bi-trash3-fill text-danger"></i> Delete
                             </button>
-                            <div className="dropdown-menu dropdown-menu-start" aria-labelledby="triggerId">
-                              <Link className="dropdown-item" href={`/dashboard/users/roles/${role.id}`}>
-                                <i className="bi bi-pen-fill text-info"></i> Edit
-                              </Link>
-                              <button className="dropdown-item" onClick={() => handleDelete(role.id)}>
-                                <i className="bi bi-trash3-fill text-danger"></i> Delete
-                              </button>
-                            </div>
                           </div>
                         </td>
                         <td scope="row">{role.id}</td>

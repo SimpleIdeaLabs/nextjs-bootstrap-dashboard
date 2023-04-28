@@ -32,7 +32,6 @@ export default function CreateSystemUser() {
       handleHttpRequestError({
         error,
         badRequestCallback: (validationErrors: any) => {
-          console.log(validationErrors);
           setNameError(_.get(validationErrors, 'name', null));
         },
       });
@@ -75,7 +74,7 @@ export default function CreateSystemUser() {
                 />
               </FormBody>
               <FormAction>
-                <button className="btn btn-primary btn-block" type="button" onClick={handleCreateRole}>
+                <button className="btn btn-outline-primary btn-block" type="button" onClick={handleCreateRole}>
                   Create
                 </button>
               </FormAction>

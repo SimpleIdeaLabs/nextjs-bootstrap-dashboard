@@ -23,7 +23,9 @@ const FilterModal = (props: FilterModalProps) => {
         <div className="modal-dialog" role="document">
           <div className="modal-content">
             <div className="modal-header">
-              <h5 className="modal-title">Filter</h5>
+              <p className="modal-title">
+                <h5>Filter</h5>
+              </p>
               <button
                 type="button"
                 className="btn-close"
@@ -47,11 +49,11 @@ const FilterModal = (props: FilterModalProps) => {
                 </FormBody>
                 <FormAction>
                   <div className="d-grid">
-                    <button className="btn btn-primary btn-block mb-3" onClick={() => handleOnFilter()}>
+                    <button className="btn btn-outline-primary btn-block mb-3" onClick={() => handleOnFilter()}>
                       Filter
                     </button>
                     <button
-                      className="btn btn-danger btn-block"
+                      className="btn btn-outline-danger btn-block"
                       type="button"
                       onClick={() => {
                         handleOnClearFilter();

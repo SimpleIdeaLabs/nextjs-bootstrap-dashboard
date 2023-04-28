@@ -76,11 +76,14 @@ const SearchModal = (props: SearchModalProps) => {
                 </FormBody>
                 <FormAction>
                   <div className="d-grid">
-                    <button className="btn btn-primary btn-block mb-3" type="button" onClick={() => handleOnSearch()}>
+                    <button
+                      className="btn btn-outline-primary btn-block mb-3"
+                      type="button"
+                      onClick={() => handleOnSearch()}>
                       Search
                     </button>
                     <button
-                      className="btn btn-danger btn-block"
+                      className="btn btn-outline-danger btn-block"
                       type="button"
                       onClick={() => {
                         handleOnClearSearch();

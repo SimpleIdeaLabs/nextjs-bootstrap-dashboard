@@ -46,7 +46,7 @@ export default function Accordion(props: AccordionProps) {
             {subLinks.map((subLink) => {
               return (
                 <li key={subLink.key} className={`list-group-item ${isChildActive(subLink.link) ? 'active' : ''}`}>
-                  <Link className={`text-${isChildActive(subLink.link) ? 'light' : 'primary'}`} href={subLink.link}>
+                  <Link className={`text-${isChildActive(subLink.link) ? 'primary' : 'grey'}`} href={subLink.link}>
                     {subLink.title}
                   </Link>
                 </li>
@@ -55,6 +55,11 @@ export default function Accordion(props: AccordionProps) {
           </ul>
         </div>
       </div>
+      <style jsx>{`
+        .accordion-button:not(.collapsed) {
+          background-color: transparent;
+        }
+      `}</style>
     </div>
   );
 }

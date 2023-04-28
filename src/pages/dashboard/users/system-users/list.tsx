@@ -180,14 +180,14 @@ export default function SystemUsersList() {
         <div className="mb-3 fs-6">Are you sure you want to delete this item?</div>
         <div className="d-flex justify-content-end">
           <button
-            className="btn btn-secondary me-2"
+            className="btn btn-outline-success me-2"
             onClick={() => {
               toast.dismiss('confirm');
             }}>
             No
           </button>
           <button
-            className="btn btn-danger"
+            className="btn btn-outline-danger"
             onClick={() => {
               toast.dismiss('confirm');
               sendDeleteRequest(userId);
@@ -316,17 +316,17 @@ export default function SystemUsersList() {
                 <div className="btn-group">
                   <button
                     id="btnSystemUserSearchModal"
-                    className="btn btn-secondary"
+                    className="btn btn-outline-primary"
                     onClick={() => setDisplaySearchModal(true)}>
                     <i className="bi bi-search"></i> Search
                   </button>
                   <button
                     id="btnSystemUserFilterModal"
-                    className="btn btn-dark"
+                    className="btn btn-outline-dark"
                     onClick={() => setDisplayFilterModal(true)}>
                     <i className="bi bi-funnel-fill"></i> Filter
                   </button>
-                  <Link href="/dashboard/users/system-users/create" className="btn btn-primary">
+                  <Link href="/dashboard/users/system-users/create" className="btn btn-outline-success">
                     <i className="bi bi-plus-circle-fill"></i> New
                   </Link>
                 </div>
@@ -348,24 +348,22 @@ export default function SystemUsersList() {
                     return (
                       <tr key={user.id}>
                         <td scope="row">
-                          <div className="btn-group">
-                            <button
-                              className="btn btn-light"
-                              type="button"
-                              id="triggerId"
-                              data-bs-toggle="dropdown"
-                              aria-haspopup="true"
-                              aria-expanded="false">
-                              <i className="bi bi-three-dots-vertical"></i>
+                          <button
+                            className="btn btn-sm btn-light"
+                            type="button"
+                            id="triggerId"
+                            data-bs-toggle="dropdown"
+                            aria-haspopup="true"
+                            aria-expanded="false">
+                            <i className="bi bi-three-dots-vertical"></i>
+                          </button>
+                          <div className="dropdown-menu dropdown-menu-start" aria-labelledby="triggerId">
+                            <Link className="dropdown-item" href={`/dashboard/users/system-users/${user.id}`}>
+                              <i className="bi bi-pen-fill text-info"></i> Edit
+                            </Link>
+                            <button className="dropdown-item" onClick={() => handleDelete(user.id)}>
+                              <i className="bi bi-trash3-fill text-danger"></i> Delete
                             </button>
-                            <div className="dropdown-menu dropdown-menu-start" aria-labelledby="triggerId">
-                              <Link className="dropdown-item" href={`/dashboard/users/system-users/${user.id}`}>
-                                <i className="bi bi-pen-fill text-info"></i> Edit
-                              </Link>
-                              <button className="dropdown-item" onClick={() => handleDelete(user.id)}>
-                                <i className="bi bi-trash3-fill text-danger"></i> Delete
-                              </button>
-                            </div>
                           </div>
                         </td>
                         <td scope="row">{user.id}</td>

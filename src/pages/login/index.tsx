@@ -91,7 +91,7 @@ function Login() {
             </FormBody>
             <FormAction>
               <div className="d-grid gap-2 mb-3">
-                <button className="btn btn-primary btn-block" onClick={handleLoginRequest}>
+                <button className="btn btn-outline-primary btn-block" onClick={handleLoginRequest}>
                   Login
                 </button>
               </div>

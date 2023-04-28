@@ -28,7 +28,6 @@ export default function UpdateUserRole() {
           setName(role.name);
         }
       } catch (error) {
-        console.log(error);
         handleHttpRequestError({
           error,
         });
@@ -47,16 +46,13 @@ export default function UpdateUserRole() {
       if (!status) {
         throw new Error(message);
       }
-      setName('');
       setNameError('');
-      toast.success(`${name} role is updated!`, {
-        onClose: () => router.push('/dashboard/users/roles/list'),
-      });
+      toast.success(`${name} role is updated!`);
+      router.push(`/dashboard/users/roles/${roleId}`);
     } catch (error: unknown) {
       handleHttpRequestError({
         error,
         badRequestCallback: (validationErrors: any) => {
-          console.log(validationErrors);
           setNameError(_.get(validationErrors, 'name', null));
         },
       });
@@ -75,18 +71,18 @@ export default function UpdateUserRole() {
             },
             {
               title: 'Roles',
-              link: '/dashboard/users/roles/list',
+              link: '/dashboard/users/roles/list?page=1&limit=10',
               active: false,
             },
             {
-              title: 'Update',
-              link: '/dashboard/users/roles/create',
+              title: `${name}`,
+              link: `/dashboard/users/roles/${roleId}`,
               active: true,
             },
           ]}
         />
         <div className="row">
-          <div className={`col-12 col-md-10 col-lg-8 mx-auto`}>
+          <div className={`col-12 col-md-10 col-lg-6 mx-md-auto`}>
             <Form title="Create User Role">
               <FormBody>
                 <Input
@@ -99,7 +95,7 @@ export default function UpdateUserRole() {
                 />
               </FormBody>
               <FormAction>
-                <button className="btn btn-primary btn-block" type="button" onClick={handleUpdateRole}>
+                <button className="btn btn-outline-primary btn-block" type="button" onClick={handleUpdateRole}>
                   Update
                 </button>
               </FormAction>

@@ -264,7 +264,7 @@ export default function SystemUserForm(props: SystemUserFormProps) {
                 />
               </FormBody>
               <FormAction>
-                <button className="btn btn-primary btn-block" type="button" onClick={_handleOnformSubmit}>
+                <button className="btn btn-outline-primary btn-block" type="button" onClick={_handleOnformSubmit}>
                   {formProperties.buttonLabel}
                 </button>
               </FormAction>

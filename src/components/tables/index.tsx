@@ -121,12 +121,7 @@ export default function Table(props: TableProps) {
           <div className="card-header d-flex justify-content-between align-items-center">{tableHeader}</div>
           <div className="card-body" style={{ height: '65vh', overflowY: 'auto' }}>
             <div className="table-responsive h-100">
-              <table
-                className="table
-              table-hover
-              align-middle">
-                {tableBody}
-              </table>
+              <table className="table table-hover align-middle table-striped">{tableBody}</table>
             </div>
           </div>
           <div className="card-footer d-flex justify-content-end">{tablePagination}</div>

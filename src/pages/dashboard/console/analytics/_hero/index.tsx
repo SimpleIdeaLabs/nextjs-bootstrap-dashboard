@@ -31,7 +31,7 @@ export default function Hero(props: any) {
                 <img
                   src="/images/illustrations/man-with-laptop-light.png"
                   className="img-fluid"
-                  style={{ maxWidth: 220 }}
+                  style={{ maxWidth: 300 }}
                 />
               </div>
             </div>
