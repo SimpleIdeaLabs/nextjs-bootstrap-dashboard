@@ -1,11 +1,11 @@
-import DashboardLayoutContainer from '../../../layouts/dashboard-layout';
+import DashboardLayoutContainer from '../../../../layouts/dashboard-layout';
 import _ from 'lodash';
-import ProfileSecurityPage from './_security';
+import Password from './_password';
 
 function ProfileSecurityContainer() {
   return (
     <DashboardLayoutContainer>
-      <ProfileSecurityPage />
+      <Password />
     </DashboardLayoutContainer>
   );
 }

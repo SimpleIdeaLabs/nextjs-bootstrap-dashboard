@@ -130,7 +130,7 @@ const DashboardLayout = (props: any) => {
             <div className="row">
               {/* SideBar */}
               <nav
-                className={`col-md-3 col-lg-2 d-md-block ps-0 pe-0 bg-secondary sidebar ${
+                className={`col-md-3 col-lg-2 d-md-block ps-0 pe-0 bg-secondary sidebar shadow ${
                   isSidebarOpen ? '' : 'collapse'
                 } border-end border-primary`}>
                 <div className="sidebar-sticky">
@@ -212,6 +212,21 @@ const DashboardLayout = (props: any) => {
                           key: 'misc-under-maintenance',
                           title: 'Under Maintenance',
                           link: '/misc/under-maintenance',
+                        },
+                      ]}
+                    />
+                    <Accordion
+                      collapseId="storeCollapse"
+                      linkHeadingId="storeLinkHeading"
+                      parentLink={{
+                        title: 'Settings',
+                        link: '/settings',
+                      }}
+                      subLinks={[
+                        {
+                          key: 'health-service-details',
+                          title: 'Health Service Details',
+                          link: '/dashboard/settings/health-service-details',
                         },
                       ]}
                     />

@@ -158,7 +158,7 @@ function ProfilePage() {
               />
             </FormBody>
             <FormAction>
-              <button className="btn btn-primary btn-block" type="button" onClick={handleUpdateProfile}>
+              <button className="btn btn-outline-primary btn-block" type="button" onClick={handleUpdateProfile}>
                 Update
               </button>
             </FormAction>

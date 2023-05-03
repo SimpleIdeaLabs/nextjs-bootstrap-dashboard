@@ -96,7 +96,13 @@ function Input(props: InputProps) {
           <label htmlFor="" className="form-label">
             {label}
           </label>
-          <Select options={options} isMulti={multiSelect} onChange={(v) => onValueChange(v)} defaultValue={value} />
+          <Select
+            className={'form-control'}
+            options={options}
+            isMulti={multiSelect}
+            onChange={(v) => onValueChange(v)}
+            defaultValue={value}
+          />
           {displayError()}
         </div>
       );
