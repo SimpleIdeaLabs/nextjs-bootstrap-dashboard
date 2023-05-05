@@ -220,6 +220,7 @@ export default function SystemUsersList() {
         queryFirstName: qFirstName as string,
         queryLastName: qLastName as string,
         queryEmail: qEmail as string,
+        queryFilterRole: filterRole as string[],
       });
     } catch (error) {
       handleHttpRequestError({
@@ -368,7 +369,7 @@ export default function SystemUsersList() {
                         </td>
                         <td scope="row">{user.id}</td>
                         <td scope="row">
-                          <div className="rounded-circle overflow-hidden shadow" style={{ width: 30, height: 30 }}>
+                          <div className="rounded-circle overflow-hidden shadow" style={{ width: 60, height: 60 }}>
                             <img
                               src={`${process.env.FILE_UPLOADS_URL}/profile-photos/${user.profilePhoto}`}
                               alt="Avatar"

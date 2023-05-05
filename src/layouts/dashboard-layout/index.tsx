@@ -216,6 +216,21 @@ const DashboardLayout = (props: any) => {
                       ]}
                     />
                     <Accordion
+                      collapseId="servicesCollapse"
+                      linkHeadingId="servicesLinkHeading"
+                      parentLink={{
+                        title: 'Services',
+                        link: '/services',
+                      }}
+                      subLinks={[
+                        {
+                          key: 'services',
+                          title: 'Offered Services',
+                          link: '/dashboard/services/list?page=1&limit=10',
+                        },
+                      ]}
+                    />
+                    <Accordion
                       collapseId="storeCollapse"
                       linkHeadingId="storeLinkHeading"
                       parentLink={{

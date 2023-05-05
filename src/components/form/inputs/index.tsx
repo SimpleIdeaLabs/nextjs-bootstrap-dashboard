@@ -2,7 +2,7 @@ import Select from 'react-select';
 
 interface InputProps {
   id: string;
-  type: 'text' | 'password' | 'email' | 'checkbox' | 'select';
+  type: 'text' | 'password' | 'email' | 'checkbox' | 'select' | 'number';
   label: string;
   value: any;
   onValueChange: (value: any) => void;
@@ -25,13 +25,14 @@ function Input(props: InputProps) {
 
   switch (type) {
     case 'text':
+    case 'number':
       return (
         <div className="mb-3">
           <label htmlFor={id} className="form-label">
             {label}
           </label>
           <input
-            type="text"
+            type={type}
             className={`form-control ${error ? 'is-invalid' : ''}`}
             name={id}
             id={id}
