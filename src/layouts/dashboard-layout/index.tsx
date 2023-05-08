@@ -144,6 +144,11 @@ const DashboardLayout = (props: any) => {
                       }}
                       subLinks={[
                         {
+                          key: 'console-home',
+                          title: 'Home',
+                          link: '/dashboard/console/home',
+                        },
+                        {
                           key: 'console-analytics',
                           title: 'Analytics',
                           link: '/dashboard/console/analytics',

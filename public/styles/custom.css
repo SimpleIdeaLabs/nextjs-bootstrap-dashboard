@@ -1,11 +1,211 @@
 @charset "UTF-8";
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap");
+.primary {
+  background-color: #69aafd;
+}
+
+.bg-primary-200 {
+  background-color: #9bc6fe;
+}
+
+.bg-primary-300 {
+  background-color: #cee3fe;
+}
+
+.bg-primary-400 {
+  background-color: white;
+}
+
+.bg-primary-500 {
+  background-color: white;
+}
+
+.bg-primary-600 {
+  background-color: white;
+}
+
+.bg-primary-700 {
+  background-color: white;
+}
+
+.bg-primary-800 {
+  background-color: white;
+}
+
+.bg-primary-900 {
+  background-color: white;
+}
+
+.bg-primary-1000 {
+  background-color: white;
+}
+
+.success {
+  background-color: #64db4d;
+}
+
+.bg-success-200 {
+  background-color: #89e477;
+}
+
+.bg-success-300 {
+  background-color: #aeeca2;
+}
+
+.bg-success-400 {
+  background-color: #d3f5cc;
+}
+
+.bg-success-500 {
+  background-color: #f8fdf7;
+}
+
+.bg-success-600 {
+  background-color: white;
+}
+
+.bg-success-700 {
+  background-color: white;
+}
+
+.bg-success-800 {
+  background-color: white;
+}
+
+.bg-success-900 {
+  background-color: white;
+}
+
+.bg-success-1000 {
+  background-color: white;
+}
+
+.warning {
+  background-color: #ffce3a;
+}
+
+.bg-warning-200 {
+  background-color: #ffdb6d;
+}
+
+.bg-warning-300 {
+  background-color: #ffe7a0;
+}
+
+.bg-warning-400 {
+  background-color: #fff4d3;
+}
+
+.bg-warning-500 {
+  background-color: white;
+}
+
+.bg-warning-600 {
+  background-color: white;
+}
+
+.bg-warning-700 {
+  background-color: white;
+}
+
+.bg-warning-800 {
+  background-color: white;
+}
+
+.bg-warning-900 {
+  background-color: white;
+}
+
+.bg-warning-1000 {
+  background-color: white;
+}
+
+.danger {
+  background-color: #ea5354;
+}
+
+.bg-danger-200 {
+  background-color: #f08081;
+}
+
+.bg-danger-300 {
+  background-color: #f5aeae;
+}
+
+.bg-danger-400 {
+  background-color: #fbdbdc;
+}
+
+.bg-danger-500 {
+  background-color: white;
+}
+
+.bg-danger-600 {
+  background-color: white;
+}
+
+.bg-danger-700 {
+  background-color: white;
+}
+
+.bg-danger-800 {
+  background-color: white;
+}
+
+.bg-danger-900 {
+  background-color: white;
+}
+
+.bg-danger-1000 {
+  background-color: white;
+}
+
+.info {
+  background-color: #8b90f7;
+}
+
+.bg-info-200 {
+  background-color: #bbbefa;
+}
+
+.bg-info-300 {
+  background-color: #eaebfe;
+}
+
+.bg-info-400 {
+  background-color: white;
+}
+
+.bg-info-500 {
+  background-color: white;
+}
+
+.bg-info-600 {
+  background-color: white;
+}
+
+.bg-info-700 {
+  background-color: white;
+}
+
+.bg-info-800 {
+  background-color: white;
+}
+
+.bg-info-900 {
+  background-color: white;
+}
+
+.bg-info-1000 {
+  background-color: white;
+}
+
 /*!
  * Bootstrap  v5.2.3 (https://getbootstrap.com/)
  * Copyright 2011-2022 The Bootstrap Authors
  * Copyright 2011-2022 Twitter, Inc.
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  */
-@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap");
 :root {
   --bs-blue: #378dfc;
   --bs-indigo: #6610f2;

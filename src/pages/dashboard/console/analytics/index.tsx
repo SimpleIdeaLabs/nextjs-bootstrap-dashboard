@@ -24,7 +24,6 @@ export default function DashboardAnalytics() {
         <Hero />
         <RevenueAndPayments />
         <Transactions />
-        {/* <Timeline /> */}
       </div>
     </DashboardLayout>
   );
