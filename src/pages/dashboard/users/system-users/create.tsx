@@ -1,5 +1,5 @@
+import SystemUserForm from '../../../../components/dashboard/users/system-users/system-user-form';
 import { authenticatedRequest } from '../../../../utils/axios-util';
-import SystemUserForm from './_components/system-user-form';
 
 export default function CreateSystemUser() {
   async function handleCreateUser(payload: {

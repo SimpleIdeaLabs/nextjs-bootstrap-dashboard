@@ -10,7 +10,7 @@ interface HandleHttpRequestErrorParams {
 
 export function handleHttpRequestError(params: HandleHttpRequestErrorParams) {
   const { error, nonAxiosErrorCallback, badRequestCallback, unauthorizedRequestCallback } = params;
-
+  console.log(error);
   /**
    * Axios Error
    */

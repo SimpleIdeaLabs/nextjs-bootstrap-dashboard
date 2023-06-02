@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import DefaultLayout from '../../layouts/default-layout';
-import Form, { FormAction, FormBody } from '../../components/form';
-import Input from '../../components/form/inputs';
+import Form, { FormAction, FormBody } from '../../components/shared/form';
+import Input from '../../components/shared/form/inputs';
 
 function ForgotPassword() {
   return (

@@ -1,5 +1,85 @@
 @charset "UTF-8";
 @import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap");
+.dark {
+  background-color: #383f45;
+}
+
+.bg-tiles-dark-200 {
+  background-color: #4e5862;
+}
+
+.bg-tiles-dark-300 {
+  background-color: #65727e;
+}
+
+.bg-tiles-dark-400 {
+  background-color: #7e8b98;
+}
+
+.bg-tiles-dark-500 {
+  background-color: #9ba5ae;
+}
+
+.bg-tiles-dark-600 {
+  background-color: #b7bec5;
+}
+
+.bg-tiles-dark-700 {
+  background-color: #d3d8dc;
+}
+
+.bg-tiles-dark-800 {
+  background-color: #eff1f3;
+}
+
+.bg-tiles-dark-900 {
+  background-color: white;
+}
+
+.bg-tiles-dark-1000 {
+  background-color: white;
+}
+
+.ppp {
+  background-color: #574770;
+}
+
+.bg-purple-200 {
+  background-color: #705a90;
+}
+
+.bg-purple-300 {
+  background-color: #8975a8;
+}
+
+.bg-purple-400 {
+  background-color: #a494bc;
+}
+
+.bg-purple-500 {
+  background-color: #bfb4cf;
+}
+
+.bg-purple-600 {
+  background-color: #d9d3e3;
+}
+
+.bg-purple-700 {
+  background-color: #f4f2f7;
+}
+
+.bg-purple-800 {
+  background-color: white;
+}
+
+.bg-purple-900 {
+  background-color: white;
+}
+
+.bg-purple-1000 {
+  background-color: white;
+}
+
 .primary {
   background-color: #69aafd;
 }

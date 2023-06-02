@@ -1,11 +1,44 @@
 import _ from 'lodash';
 import { useRouter } from 'next/router';
 import { authenticatedRequest } from '../../../../utils/axios-util';
-import SystemUserForm from './_components/system-user-form';
+import SystemUserForm from '../../../../components/dashboard/users/system-users/system-user-form';
+import { useEffect, useState } from 'react';
+
+interface UpdateSystemUserState {
+  userId: null | number;
+  optionRoles: any[];
+  formValues: {
+    profilePhoto: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    roles: any[];
+    password: string;
+    confirmPassword: string;
+  };
+  formErrors: any;
+  loading: boolean;
+}
 
 export default function UpdateSystemUser() {
   const router = useRouter();
-  const userId = _.get(router, 'query.userId', null);
+  const [updateSystemUserState, setUpdateSystemUserState] = useState<UpdateSystemUserState>({
+    userId: null,
+    optionRoles: [],
+    formValues: {
+      profilePhoto: '',
+      firstName: '',
+      lastName: '',
+      email: '',
+      roles: [],
+      password: '',
+      confirmPassword: '',
+    },
+    formErrors: {},
+    loading: true,
+  });
+
+  useEffect(() => {}, [router.query]);
 
   async function handleUpdateUser(payload: {
     firstName: string;

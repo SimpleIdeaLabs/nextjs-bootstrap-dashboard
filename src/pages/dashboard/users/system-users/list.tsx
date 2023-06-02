@@ -1,179 +1,178 @@
 import Link from 'next/link';
-import { Breadcrumbs } from '../../../../components/breadcrumbs';
-import Table, { TableBody, TableHeader, TablePagination } from '../../../../components/tables';
+import { Breadcrumbs } from '../../../../components/shared/breadcrumbs';
+import Table, { TableBody, TableHeader, TablePagination } from '../../../../components/shared/tables';
 import DashboardLayout from '../../../../layouts/dashboard-layout';
-import SearchModal from './_components/search-modal';
 import { useEffect, useState } from 'react';
-import FilterModal from './_components/filter-modal';
 import { useRouter } from 'next/router';
 import _ from 'lodash';
-import { authenticatedRequest } from '../../../../utils/axios-util';
 import { handleHttpRequestError } from '../../../../utils/error-handling';
 import { toast } from 'react-toastify';
 import qs from 'querystring';
+import SearchModal from '../../../../components/dashboard/users/system-users/search-modal';
+import FilterModal from '../../../../components/dashboard/users/system-users/filter-modal';
+import { User } from '../../../../models/user.model';
+import { DEFAULT_PAGINATION, Pagination } from '../../../../dtos/shared.dto';
+import { UserService } from '../../../../services/user.service';
+import { RoleService } from '../../../../services/role.service';
+import Head from 'next/head';
 
-export default function SystemUsersList() {
+interface SystemUserListPageState {
+  systemUsers: User[];
+  search: {
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+  filter: {
+    role: any[];
+  };
+  optionRoles: any[];
+  selectedRoles: any[];
+  pagination: Pagination;
+  loading: boolean;
+  displaySearchModal: boolean;
+  displayFilterModal: boolean;
+}
+
+export default function SystemUsersListPage() {
   const router = useRouter();
-  const [systemUsers, setSystemUsers] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
 
-  /**
-   * Search Fields
-   */
-  const [qFirstName, setQFirstName] = useState(_.get(router, 'query.firstName', ''));
-  const [qLastName, setQLastName] = useState(_.get(router, 'query.lastName', ''));
-  const [qEmail, setQEmail] = useState(_.get(router, 'query.email', ''));
-  const [displaySearchModal, setDisplaySearchModal] = useState(false);
-
-  /**
-   * Filter Fields
-   */
-  const [optionRoles, setOptionRoles] = useState([]);
-  const [displayFilterModal, setDisplayFilterModal] = useState(false);
-  const [filterRole, setFilterRole] = useState(router.query['role']);
-  const [selectedRoles, setSelectedRoles] = useState<any>([]);
-
-  /**
-   * Pagination Fields
-   */
-  const [pagination, setPagination] = useState({
-    page: 1,
-    limit: 10,
-    total: 0,
-    totalNumberOfPages: 0,
+  const [systemUserListPageState, setSystemUserListPageState] = useState<SystemUserListPageState>({
+    systemUsers: [],
+    search: {
+      firstName: '',
+      lastName: '',
+      email: '',
+    },
+    filter: {
+      role: [],
+    },
+    optionRoles: [],
+    selectedRoles: [],
+    pagination: DEFAULT_PAGINATION,
+    loading: true,
+    displaySearchModal: false,
+    displayFilterModal: false,
   });
 
   /**
-   * Get System Users
+   * Fetch Roles
    */
   useEffect(() => {
-    async function getSystemUsers() {
-      if (!optionRoles.length) {
-        return;
-      }
-
-      let { page, limit, firstName: queryFirstName, lastName: queryLastName, email: queryEmail } = router.query;
-
-      if (queryFirstName) {
-        setQFirstName(queryFirstName);
-      } else {
-        queryFirstName = '';
-      }
-
-      if (queryLastName) {
-        setQLastName(queryLastName);
-      } else {
-        queryLastName = '';
-      }
-
-      if (queryEmail) {
-        setQEmail(queryEmail);
-      } else {
-        queryEmail = '';
-      }
-
-      let queryFilterRole = ((): string[] => {
-        let qRole = router.query['role'];
-        if (Array.isArray(qRole) && qRole.length) {
-          return qRole as string[];
-        } else if (qRole) {
-          return [qRole as string];
-        }
-        return [];
-      })();
-      if (queryFilterRole.length) {
-        setFilterRole(queryFilterRole);
-        const _selectedRoles = optionRoles.filter((option: any) => {
-          return _.includes(queryFilterRole, option.value);
-        });
-        setSelectedRoles(_selectedRoles);
-      } else {
-        queryFilterRole = [];
-        setSelectedRoles([]);
-      }
-
-      if (page && limit) {
-        await fetchSystemUsers({
-          _page: Number(page),
-          _limit: Number(limit),
-          queryFirstName: queryFirstName as string,
-          queryLastName: queryLastName as string,
-          queryEmail: queryEmail as string,
-          queryFilterRole: queryFilterRole as string[],
-        });
-        setIsLoading(false);
-      }
-    }
-    getSystemUsers();
-  }, [router.query, optionRoles]);
-
-  /**
-   * Get Roles
-   */
-  useEffect(() => {
-    async function getRoles() {
-      await fetchRoles();
-    }
-    getRoles();
+    fetchRoles();
   }, []);
 
-  async function fetchSystemUsers(params: {
-    _page: number;
-    _limit: number;
-    queryFirstName: string;
-    queryLastName: string;
-    queryEmail: string;
-    queryFilterRole: any[];
-  }) {
-    const { _page, _limit, queryFirstName, queryLastName, queryEmail, queryFilterRole = [] } = params;
-    try {
-      let requestUrl = `/user?page=${_page}&limit=${_limit}`;
+  /**
+   * Fetch Users
+   */
+  useEffect(() => {
+    if (!_.isEmpty(router.query) && systemUserListPageState.optionRoles.length > 0) {
+      const updatedPaginationState = {
+        page: parseInt(router.query.page as string),
+        limit: parseInt(router.query.limit as string),
+      };
 
-      if (queryFirstName || queryLastName || queryEmail) {
-        if (queryFirstName) {
-          requestUrl = `${requestUrl}&firstName=${queryFirstName}`;
-        }
-        if (queryLastName) {
-          requestUrl = `${requestUrl}&lastName=${queryLastName}`;
-        }
-        if (queryEmail) {
-          requestUrl = `${requestUrl}&email=${queryEmail}`;
-        }
-      }
+      const updatedSearchState = {
+        firstName: router.query.firstName as string,
+        lastName: router.query.lastName as string,
+        email: router.query.email as string,
+      };
 
-      if (queryFilterRole.length) {
-        const filterRoleQueryParams = queryFilterRole.map((f) => `role=${f}`).join('&');
-        requestUrl = `${requestUrl}&${filterRoleQueryParams}`;
-      }
+      /**
+       * Ensure role
+       * always an array
+       * if role is defined
+       * on query parameters
+       */
+      const { role: queryRole = null } = router.query;
+      const updatedFilterState = {
+        role: queryRole ? (_.isArray(queryRole) ? queryRole : [queryRole]) : [],
+      };
 
-      const response = await authenticatedRequest.get(requestUrl);
-      const {
-        data: { data: responseData },
-      } = response;
-      setPagination({
-        ...responseData.pagination,
+      setSystemUserListPageState((prevState) => ({
+        ...prevState,
+        search: updatedSearchState,
+        filter: updatedFilterState,
+        pagination: {
+          ...prevState.pagination,
+          ...updatedPaginationState,
+        },
+        loading: true,
+      }));
+
+      fetchSystemUsers({
+        pagination: updatedPaginationState,
+        search: updatedSearchState,
+        filter: updatedFilterState,
       });
-      setSystemUsers(responseData.users);
+    }
+  }, [router.query, systemUserListPageState.optionRoles]);
+
+  /**
+   * Fetch System Users
+   */
+  async function fetchSystemUsers(params: { pagination: any; search: any; filter: any }) {
+    const { pagination, search, filter } = params;
+    const { role = [] } = filter;
+    try {
+      const selectedRoles: any[] = [];
+      role.map((r: any) => {
+        const selectedRole = _.find(systemUserListPageState.optionRoles, {
+          value: r,
+        });
+        if (selectedRole) {
+          selectedRoles.push(selectedRole);
+        }
+      });
+
+      const { users, pagination: paginationResponse } = await UserService.getUserList({
+        pagination,
+        search,
+        filter,
+      });
+
+      setSystemUserListPageState((prevState) => ({
+        ...prevState,
+        selectedRoles,
+        systemUsers: users,
+        pagination: paginationResponse,
+      }));
     } catch (error) {
       handleHttpRequestError({
         error,
       });
+    } finally {
+      setTimeout(() => {
+        setSystemUserListPageState((prevState) => ({
+          ...prevState,
+          loading: false,
+        }));
+      }, 200);
     }
   }
 
+  /**
+   * Fetch Roles
+   */
   async function fetchRoles() {
-    const response = await authenticatedRequest.get(`/role?page=${1}&limit=${1000}`);
-    const {
-      data: { data: responseData },
-    } = response;
-    const { roles = [] } = responseData;
+    const { roles = [] } = await RoleService.getRoleList({
+      page: 1,
+      limit: 1000,
+    });
     const optionRoles = roles.map((role: any) => ({
       value: role.key,
       label: role.name,
     }));
-    setOptionRoles(optionRoles);
+    setSystemUserListPageState((prevState) => ({
+      ...prevState,
+      optionRoles,
+      loading: true,
+    }));
   }
 
+  /**
+   * Delete Role
+   */
   async function handleDelete(userId: number) {
     toast.warning(
       <div className="p-3">
@@ -209,18 +208,21 @@ export default function SystemUsersList() {
     );
   }
 
+  /**
+   * Delete Role Request
+   */
   async function sendDeleteRequest(userId: number) {
     try {
-      await authenticatedRequest.delete(`/user/${userId}`);
+      await UserService.deleteUser({
+        userId,
+      });
       toast.success('User successfully deleted!');
+      const { pagination, search, filter } = systemUserListPageState;
       const { page, limit } = pagination;
       await fetchSystemUsers({
-        _page: Number(page),
-        _limit: Number(limit),
-        queryFirstName: qFirstName as string,
-        queryLastName: qLastName as string,
-        queryEmail: qEmail as string,
-        queryFilterRole: filterRole as string[],
+        pagination,
+        search,
+        filter,
       });
     } catch (error) {
       handleHttpRequestError({
@@ -232,6 +234,9 @@ export default function SystemUsersList() {
     }
   }
 
+  /**
+   * Goto Page
+   */
   function goToPage(page: number) {
     router.push({
       pathname: router.pathname,
@@ -239,52 +244,73 @@ export default function SystemUsersList() {
     });
   }
 
+  /**
+   * Search
+   */
   function handleOnSearch() {
-    setDisplaySearchModal(false);
+    displaySearchModal(false);
+    const { search, selectedRoles = [] } = systemUserListPageState;
+    const { firstName, lastName, email } = search;
     const query = {
       ...router.query,
       page: 1,
-      firstName: qFirstName,
-      lastName: qLastName,
-      email: qEmail,
+      firstName,
+      lastName,
+      email,
       role: selectedRoles.map((role: any) => role.value),
     } as any;
     router.push(`/dashboard/users/system-users/list?${qs.encode(query)}`);
-    router.push({
-      pathname: router.pathname,
-      query: { ...router.query, page: 1, firstName: qFirstName, lastName: qLastName, email: qEmail },
-    });
-  }
-
-  function handleOnClearSearch() {
-    setDisplaySearchModal(false);
-    setQFirstName('');
-    setQLastName('');
-    setQEmail('');
-    const query: any = { ...router.query, page: 1 };
-    delete query.firstName;
-    delete query.lastName;
-    delete query.email;
-
     router.push({
       pathname: router.pathname,
       query,
     });
   }
 
+  /**
+   * Clear Search
+   */
+  function handleOnClearSearch() {
+    displaySearchModal(false);
+    setSystemUserListPageState((prevState) => ({
+      ...prevState,
+      search: {
+        firstName: '',
+        lastName: '',
+        email: '',
+      },
+    }));
+    const query: any = { ...router.query, page: 1 };
+    delete query.firstName;
+    delete query.lastName;
+    delete query.email;
+    router.push({
+      pathname: router.pathname,
+      query,
+    });
+  }
+
+  /**
+   * Filter
+   */
   function handleOnFilter() {
-    setDisplayFilterModal(false);
+    displayFilterModal(false);
     const query = {
       ...router.query,
       page: 1,
-      role: selectedRoles.map((role: any) => role.value),
+      role: systemUserListPageState.filter.role.map((role: any) => role.value),
     } as any;
     router.push(`/dashboard/users/system-users/list?${qs.encode(query)}`);
   }
 
+  /**
+   * Clear Filter
+   */
   function handleOnClearFilter() {
-    setDisplayFilterModal(false);
-    setSelectedRoles([]);
+    displayFilterModal(false);
+    setSystemUserListPageState((prevState) => ({
+      ...prevState,
+      selectedRoles: [],
+    }));
     const query: any = {
       ...router.query,
     };
@@ -292,8 +318,57 @@ export default function SystemUsersList() {
     router.push(`/dashboard/users/system-users/list?${qs.encode(query)}`);
   }
 
+  /**
+   * Toggle Search Modal
+   */
+  function displaySearchModal(display: boolean) {
+    setSystemUserListPageState((prevState) => ({
+      ...prevState,
+      displaySearchModal: display,
+    }));
+  }
+
+  /**
+   * Toggle Filter Modal
+   */
+  function displayFilterModal(display: boolean) {
+    setSystemUserListPageState((prevState) => ({
+      ...prevState,
+      displayFilterModal: display,
+    }));
+  }
+
+  /**
+   * Handle Filter Change
+   */
+  function handleFilterValueChange(field: string, value: any) {
+    setSystemUserListPageState((prevState) => ({
+      ...prevState,
+      filter: {
+        ...prevState.filter,
+        [field]: value,
+      },
+    }));
+  }
+
+  /**
+   * Handle Search Change
+   */
+  function handleSearchValueChange(field: string, value: any) {
+    setSystemUserListPageState((prevState) => ({
+      ...prevState,
+      search: {
+        ...prevState.search,
+        [field]: value,
+      },
+    }));
+  }
+
   return (
     <DashboardLayout>
+      <Head>
+        <title>System Users</title>
+      </Head>
       <div className="container-fluid">
         <Breadcrumbs
           links={[
@@ -311,20 +386,20 @@ export default function SystemUsersList() {
         />
         <div className="row">
           <div className="col-lg-12">
-            <Table title="Users" isLoading={false}>
+            <Table title="Users" isLoading={systemUserListPageState.loading}>
               <TableHeader>
-                <h4 className="card-title mb-0">Users</h4>
+                <h4 className="card-title mb-0"></h4>
                 <div className="btn-group">
                   <button
                     id="btnSystemUserSearchModal"
                     className="btn btn-outline-primary"
-                    onClick={() => setDisplaySearchModal(true)}>
+                    onClick={() => displaySearchModal(true)}>
                     <i className="bi bi-search"></i> Search
                   </button>
                   <button
                     id="btnSystemUserFilterModal"
                     className="btn btn-outline-dark"
-                    onClick={() => setDisplayFilterModal(true)}>
+                    onClick={() => displayFilterModal(true)}>
                     <i className="bi bi-funnel-fill"></i> Filter
                   </button>
                   <Link href="/dashboard/users/system-users/create" className="btn btn-outline-success">
@@ -345,7 +420,7 @@ export default function SystemUsersList() {
                   </tr>
                 </thead>
                 <tbody className="table-group-divider">
-                  {systemUsers.map((user: any) => {
+                  {systemUserListPageState.systemUsers.map((user: any) => {
                     return (
                       <tr key={user.id}>
                         <td scope="row">
@@ -394,31 +469,31 @@ export default function SystemUsersList() {
                   })}
                 </tbody>
               </TableBody>
-              <TablePagination pagination={pagination} goToPage={goToPage} />
+              <TablePagination pagination={systemUserListPageState.pagination} goToPage={goToPage} />
             </Table>
           </div>
         </div>
       </div>
       {/* Modals */}
       <SearchModal
-        firstName={qFirstName as string}
-        onChangeFirstName={setQFirstName}
-        lastName={qLastName as string}
-        onChangeLastName={setQLastName}
-        email={qEmail as string}
-        onChangeEmail={setQEmail}
-        showModal={displaySearchModal}
-        onClose={() => setDisplaySearchModal(false)}
+        firstName={systemUserListPageState.search.firstName}
+        onChangeFirstName={(v) => handleSearchValueChange('firstName', v)}
+        lastName={systemUserListPageState.search.lastName}
+        onChangeLastName={(v) => handleSearchValueChange('lastName', v)}
+        email={systemUserListPageState.search.email}
+        onChangeEmail={(v) => handleSearchValueChange('email', v)}
+        showModal={systemUserListPageState.displaySearchModal}
+        onClose={() => displaySearchModal(false)}
         handleOnSearch={handleOnSearch}
         handleOnClearSearch={handleOnClearSearch}
       />
-      {isLoading ? null : (
+      {systemUserListPageState.loading ? null : (
         <FilterModal
-          selectedRoles={selectedRoles}
-          optionRoles={optionRoles}
-          handleOnChange={setSelectedRoles}
-          showModal={displayFilterModal}
-          onClose={() => setDisplayFilterModal(false)}
+          selectedRoles={systemUserListPageState.selectedRoles}
+          optionRoles={systemUserListPageState.optionRoles}
+          handleOnChange={(v) => handleFilterValueChange('role', v)}
+          showModal={systemUserListPageState.displayFilterModal}
+          onClose={() => displayFilterModal(false)}
           handleOnFilter={handleOnFilter}
           handleOnClearFilter={handleOnClearFilter}
         />

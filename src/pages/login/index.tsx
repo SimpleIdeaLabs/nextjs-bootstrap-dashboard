@@ -1,88 +1,134 @@
-import Link from 'next/link';
-import DefaultLayout from '../../layouts/default-layout';
-import Form, { FormAction, FormBody } from '../../components/form';
-import Input from '../../components/form/inputs';
-import { useState } from 'react';
-import axios from 'axios';
-import _ from 'lodash';
-import { useRouter } from 'next/router';
 import jsCookie from 'js-cookie';
-import { handleHttpRequestError } from '../../utils/error-handling';
+import _ from 'lodash';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { useState } from 'react';
 import { toast } from 'react-toastify';
+import Form, { FormAction, FormBody } from '../../components/shared/form';
+import Input from '../../components/shared/form/inputs';
+import DefaultLayout from '../../layouts/default-layout';
+import { handleHttpRequestError } from '../../utils/error-handling';
+import { UserService } from '../../services/user.service';
+import Spinner from '../../components/shared/spinner';
+
+interface LoginPageState {
+  formValues: {
+    email: string;
+    password: string;
+  };
+  formErrors: any;
+  loading: boolean;
+}
 
 function Login() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [emailError, setEmailError] = useState('');
-  const [password, setPassword] = useState('');
-  const [passwordError, setPasswordError] = useState('');
+  const [loginState, setLoginState] = useState<LoginPageState>({
+    formValues: {
+      email: '',
+      password: '',
+    },
+    formErrors: {},
+    loading: false,
+  });
 
   async function handleLoginRequest() {
-    resetErrors();
+    setLoginState((prevState) => ({
+      ...prevState,
+      loading: true,
+    }));
+
     try {
-      const payload = {
-        email,
-        password,
-      };
-      const {
-        data: { data: responseData },
-      } = await axios.post(`${process.env.API_URL}/user/login`, payload);
-      jsCookie.set('token', responseData.token);
+      const { token } = await UserService.login(loginState.formValues);
+      jsCookie.set('token', token);
       router.push('/dashboard');
     } catch (error: unknown) {
       handleHttpRequestError({
         error,
-        badRequestCallback: (validationErrors: any) => {
-          setEmailError(_.get(validationErrors, 'email', null));
-          setPasswordError(_.get(validationErrors, 'password', null));
-          toast.error('Unable to login.');
+        badRequestCallback: (validationErrors) => {
+          const { email, password } = validationErrors;
+          setLoginState((prevState) => ({
+            ...prevState,
+            formErrors: {
+              email,
+              password,
+            },
+          }));
         },
         unauthorizedRequestCallback: () => {
-          setEmailError('Email or Password is incorrect.');
-          toast.error('Unable to login.');
+          setLoginState((prevState) => ({
+            ...prevState,
+            formErrors: {
+              ...prevState.formErrors,
+              email: 'Invalid credentials',
+            },
+          }));
+          showLoginFailedToast();
         },
         nonAxiosErrorCallback: () => {
-          toast.error('Unable to login.');
+          showLoginFailedToast();
         },
       });
+    } finally {
+      setTimeout(() => {
+        setLoginState((prevState) => ({
+          ...prevState,
+          loading: false,
+        }));
+      }, 500);
     }
   }
 
+  function showLoginFailedToast() {
+    toast.error('Unable to login.');
+  }
+
+  function handleValueChange(field: string, value: any) {
+    setLoginState((prevState) => ({
+      ...prevState,
+      formValues: {
+        ...prevState.formValues,
+        [field]: value,
+      },
+    }));
+  }
+
   function resetErrors() {
-    setEmailError('');
-    setPasswordError('');
+    setLoginState((prevState) => ({
+      ...prevState,
+      formErrors: {},
+    }));
   }
 
   return (
     <DefaultLayout>
       <div className="row">
         <div className="d-none d-md-block" style={{ height: 150 }}></div>
-        <div className={`col-12 col-md-6 col-lg-4 mx-md-auto mt-5`}>
+        <div className="col-12 col-md-6 col-lg-4 mx-md-auto mt-5">
           <Form title="Login">
             <FormBody>
               <Input
                 id="email"
                 type="email"
                 label="Email"
-                value={email}
-                onValueChange={(v) => setEmail(v)}
-                error={emailError}
+                value={loginState.formValues.email}
+                onValueChange={(v) => handleValueChange('email', v)}
+                error={_.get(loginState.formErrors, 'email', null)}
                 placeholder="JohnDoe@email.com"
               />
               <Input
                 id="password"
                 type="password"
                 label="Password"
-                value={password}
-                onValueChange={(v) => setPassword(v)}
-                error={passwordError}
+                value={loginState.formValues.password}
+                onValueChange={(v) => handleValueChange('password', v)}
+                error={_.get(loginState.formErrors, 'password', null)}
               />
               <Input
                 id="remember"
                 type="checkbox"
                 label="Remember me"
                 value={true}
-                onValueChange={(v) => setPassword(v)}
+                onValueChange={(v) => console.log(v)}
                 error={null}
               />
               <div className="mb-3">
@@ -91,8 +137,11 @@ function Login() {
             </FormBody>
             <FormAction>
               <div className="d-grid gap-2 mb-3">
-                <button className="btn btn-outline-primary btn-block" onClick={handleLoginRequest}>
-                  Login
+                <button
+                  className="btn btn-outline-primary btn-block"
+                  onClick={handleLoginRequest}
+                  disabled={loginState.loading}>
+                  {loginState.loading ? <Spinner /> : 'Login'}
                 </button>
               </div>
               <div className="text-center">

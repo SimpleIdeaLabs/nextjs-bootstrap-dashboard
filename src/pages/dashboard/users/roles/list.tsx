@@ -1,56 +1,84 @@
-import Link from 'next/link';
-import { Breadcrumbs } from '../../../../components/breadcrumbs';
-import Table, { TableBody, TableHeader, TablePagination } from '../../../../components/tables';
-import DashboardLayout from '../../../../layouts/dashboard-layout';
-import SearchModal from './_components/search-modal';
-import { useEffect, useState } from 'react';
-import { authenticatedRequest } from '../../../../utils/axios-util';
-import { handleHttpRequestError } from '../../../../utils/error-handling';
-import { useRouter } from 'next/router';
 import _ from 'lodash';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
+import RoleSearchModal from '../../../../components/dashboard/users/roles/role-search-modal';
+import { Breadcrumbs } from '../../../../components/shared/breadcrumbs';
+import Table, { TableBody, TableHeader, TablePagination } from '../../../../components/shared/tables';
+import { Pagination } from '../../../../dtos/shared.dto';
+import DashboardLayout from '../../../../layouts/dashboard-layout';
+import { Role } from '../../../../models/role.model';
+import { RoleService } from '../../../../services/role.service';
+import { handleHttpRequestError } from '../../../../utils/error-handling';
+import Head from 'next/head';
+
+interface UserRoleListPageState {
+  roles: Role[];
+  filter: {
+    keyword: string;
+  };
+  pagination: Pagination;
+  displaySearchModal: boolean;
+  loading: boolean;
+}
 
 export default function UserRolesList() {
   const router = useRouter();
-  const [roles, setRoles] = useState([]);
-  const [keyword, setKeyword] = useState(_.get(router, 'query.keyword', ''));
-  const [pagination, setPagination] = useState({
-    page: 1,
-    limit: 10,
-    total: 0,
-    totalNumberOfPages: 0,
+  const [userRoleListPageState, setUserRoleListPageState] = useState<UserRoleListPageState>({
+    roles: [],
+    filter: {
+      keyword: _.get(router, 'query.keyword', '') as string,
+    },
+    pagination: {
+      page: parseInt(router.query.page as string) || 1,
+      limit: parseInt(router.query.limit as string) || 10,
+      total: 0,
+      totalNumberOfPages: 0,
+    },
+    displaySearchModal: false,
+    loading: true,
   });
-  const [displaySearchModal, setDisplaySearchModal] = useState(false);
 
   useEffect(() => {
-    async function getRoles() {
-      const page = router.query.page;
-      const limit = router.query.limit;
-      let queryKeyword = router.query.keyword;
+    if (!_.isEmpty(router.query)) {
+      const updatedPaginationState = {
+        page: parseInt(router.query.page as string),
+        limit: parseInt(router.query.limit as string),
+      };
 
-      if (queryKeyword) {
-        setKeyword(queryKeyword);
-      } else {
-        queryKeyword = '';
-      }
+      setUserRoleListPageState((prevState) => ({
+        ...prevState,
+        filter: {
+          keyword: router.query.keyword as string,
+        },
+        pagination: {
+          ...prevState.pagination,
+          ...updatedPaginationState,
+        },
+        loading: true,
+      }));
 
-      if (page && limit) {
-        fetchRoles(+page, +limit, keyword as string);
-      }
+      fetchRoles(updatedPaginationState, router.query.keyword as string);
     }
-    getRoles();
-  }, [router.query.keyword, router.query.page, router.query.limit]);
+  }, [router.query]);
 
-  async function fetchRoles(_page: number, _limit: number, _keyword: string) {
+  async function fetchRoles(pagination: any, keyword: any) {
+    const { page, limit } = pagination;
     try {
-      const response = await authenticatedRequest.get(`/role?page=${_page}&limit=${_limit}&keyword=${_keyword}`);
-      const {
-        data: { data: responseData },
-      } = response;
-      setPagination({
-        ...responseData.pagination,
+      const { roles = [], pagination } = await RoleService.getRoleList({
+        page,
+        limit,
+        keyword,
       });
-      setRoles(responseData.roles);
+      setTimeout(() => {
+        setUserRoleListPageState((prevState) => ({
+          ...prevState,
+          roles,
+          pagination,
+          loading: false,
+        }));
+      }, 200);
     } catch (error) {
       handleHttpRequestError({
         error,
@@ -59,7 +87,9 @@ export default function UserRolesList() {
   }
 
   function handleOnSearch() {
-    setDisplaySearchModal(false);
+    displaySearchModal(false);
+    const { filter } = userRoleListPageState;
+    const { keyword } = filter;
     router.push({
       pathname: router.pathname,
       query: { ...router.query, keyword, page: 1 },
@@ -67,11 +97,18 @@ export default function UserRolesList() {
   }
 
   function handleOnClearSearch() {
-    setDisplaySearchModal(false);
-    setKeyword('');
+    displaySearchModal(false);
+    setUserRoleListPageState((prevState) => ({
+      ...prevState,
+      filter: {
+        keyword: '',
+      },
+    }));
+    const query = router.query;
+    delete query.keyword;
     router.push({
       pathname: router.pathname,
-      query: { ...router.query, keyword: '', page: 1 },
+      query: { ...query, page: 1 },
     });
   }
 
@@ -84,10 +121,18 @@ export default function UserRolesList() {
 
   async function sendDeleteRequest(roleId: number) {
     try {
-      await authenticatedRequest.delete(`/role/${roleId}`);
+      await RoleService.deleteRole({ roleId });
       toast.success('Role successfully deleted!');
+      const { pagination, filter } = userRoleListPageState;
       const { page, limit } = pagination;
-      await fetchRoles(page, limit, keyword as string);
+      const { keyword } = filter;
+      await fetchRoles(
+        {
+          page,
+          limit,
+        },
+        keyword
+      );
     } catch (error) {
       handleHttpRequestError({
         error,
@@ -133,8 +178,18 @@ export default function UserRolesList() {
     );
   }
 
+  function displaySearchModal(display: boolean) {
+    setUserRoleListPageState((prevState) => ({
+      ...prevState,
+      displaySearchModal: display,
+    }));
+  }
+
   return (
     <DashboardLayout>
+      <Head>
+        <title>Roles</title>
+      </Head>
       <div className="container-fluid">
         <Breadcrumbs
           links={[
@@ -152,14 +207,14 @@ export default function UserRolesList() {
         />
         <div className="row">
           <div className="col-lg-12">
-            <Table title="Roles" isLoading={false}>
+            <Table title="Roles" isLoading={userRoleListPageState.loading}>
               <TableHeader>
-                <h4 className="card-title mb-0">Roles</h4>
+                <h4 className="card-title mb-0"></h4>
                 <div className="btn-group">
                   <button
                     id="btnRoleSearchModal"
                     className="btn btn-outline-primary"
-                    onClick={() => setDisplaySearchModal(true)}>
+                    onClick={() => displaySearchModal(true)}>
                     <i className="bi bi-search"></i> Search
                   </button>
                   <Link href="/dashboard/users/roles/create" className="btn btn-outline-success">
@@ -177,7 +232,7 @@ export default function UserRolesList() {
                   </tr>
                 </thead>
                 <tbody className="table-group-divider">
-                  {roles.map((role: any) => {
+                  {userRoleListPageState.roles.map((role: any) => {
                     return (
                       <tr key={role.id}>
                         <td scope="row">
@@ -209,17 +264,24 @@ export default function UserRolesList() {
                   })}
                 </tbody>
               </TableBody>
-              <TablePagination pagination={pagination} goToPage={goToPage} />
+              <TablePagination pagination={userRoleListPageState.pagination} goToPage={goToPage} />
             </Table>
           </div>
         </div>
       </div>
       {/* Modals */}
-      <SearchModal
-        showModal={displaySearchModal}
-        handleOnChange={(v) => setKeyword(v)}
-        keyword={keyword as string}
-        onClose={() => setDisplaySearchModal(false)}
+      <RoleSearchModal
+        showModal={userRoleListPageState.displaySearchModal}
+        handleOnChange={(v) => {
+          setUserRoleListPageState((prevState) => ({
+            ...prevState,
+            filter: {
+              keyword: v,
+            },
+          }));
+        }}
+        keyword={userRoleListPageState.filter.keyword as string}
+        onClose={() => displaySearchModal(false)}
         handleOnSearch={handleOnSearch}
         handleOnClearSearch={handleOnClearSearch}
       />

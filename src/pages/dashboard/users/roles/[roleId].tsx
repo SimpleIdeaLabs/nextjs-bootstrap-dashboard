@@ -1,62 +1,127 @@
-import Link from 'next/link';
-import Form, { FormAction, FormBody } from '../../../../components/form';
-import Input from '../../../../components/form/inputs';
-import { Breadcrumbs } from '../../../../components/breadcrumbs';
+import Form, { FormAction, FormBody } from '../../../../components/shared/form';
+import Input from '../../../../components/shared/form/inputs';
+import { Breadcrumbs } from '../../../../components/shared/breadcrumbs';
 import DashboardLayout from '../../../../layouts/dashboard-layout';
 import { useEffect, useState } from 'react';
 import { handleHttpRequestError } from '../../../../utils/error-handling';
 import _ from 'lodash';
-import { authenticatedRequest } from '../../../../utils/axios-util';
 import { useRouter } from 'next/router';
 import { toast } from 'react-toastify';
+import Spinner from '../../../../components/shared/spinner';
+import { RoleService } from '../../../../services/role.service';
 
-export default function UpdateUserRole() {
+interface UserRoleUpdatePageState {
+  roleId: null | number;
+  formValues: {
+    name: string;
+  };
+  formErrors: any;
+  loading: boolean;
+}
+
+export default function UserRoleUpdatePage() {
   const router = useRouter();
-  const roleId = _.get(router, 'query.roleId', null);
-  const [name, setName] = useState('');
-  const [nameError, setNameError] = useState('');
+  const [userRoleUpdatePageState, setUserRoleUpdatePageState] = useState<UserRoleUpdatePageState>({
+    roleId: null,
+    formValues: {
+      name: '',
+    },
+    formErrors: {},
+    loading: true,
+  });
 
   useEffect(() => {
-    async function getRole() {
-      if (!roleId) return;
-      try {
-        const {
-          data: { data: responseData },
-        } = await authenticatedRequest.get(`/role/${roleId}`);
-        const role = _.get(responseData, 'role', null);
-        if (role) {
-          setName(role.name);
-        }
-      } catch (error) {
-        handleHttpRequestError({
-          error,
-        });
-      }
+    if (!_.isEmpty(router.query)) {
+      const roleId = parseInt(router.query.roleId as string);
+      setUserRoleUpdatePageState((prevState) => ({
+        ...prevState,
+        roleId,
+      }));
+      fetchRole(roleId);
     }
-    getRole();
-  }, [roleId]);
+  }, [router.query]);
+
+  async function fetchRole(roleId: number) {
+    try {
+      const { role } = await RoleService.getRole({
+        roleId,
+      });
+      setUserRoleUpdatePageState((prevState) => ({
+        ...prevState,
+        formValues: {
+          name: role.name,
+        },
+      }));
+    } catch (error) {
+      handleHttpRequestError({
+        error,
+      });
+    } finally {
+      setTimeout(() => {
+        setUserRoleUpdatePageState((prevState) => ({
+          ...prevState,
+          loading: false,
+        }));
+      }, 200);
+    }
+  }
 
   async function handleUpdateRole() {
+    const { roleId, formValues } = userRoleUpdatePageState;
+    if (!roleId) return;
+    setUserRoleUpdatePageState((prevState) => ({
+      ...prevState,
+      loading: true,
+    }));
     try {
-      const {
-        data: { status, message },
-      } = await authenticatedRequest.patch(`/role/${roleId}`, {
-        name,
+      const { role } = await RoleService.updateRole({
+        roleId,
+        name: formValues.name,
       });
-      if (!status) {
-        throw new Error(message);
-      }
-      setNameError('');
-      toast.success(`${name} role is updated!`);
-      router.push(`/dashboard/users/roles/${roleId}`);
+      resetErrors();
+      toast.success(`${role.name} role is updated!`);
     } catch (error: unknown) {
       handleHttpRequestError({
         error,
         badRequestCallback: (validationErrors: any) => {
-          setNameError(_.get(validationErrors, 'name', null));
+          const { name = null } = validationErrors;
+          setUserRoleUpdatePageState((prevState) => ({
+            ...prevState,
+            formErrors: {
+              name,
+            },
+          }));
         },
       });
+    } finally {
+      setTimeout(() => {
+        setUserRoleUpdatePageState((prevState) => ({
+          ...prevState,
+          loading: false,
+        }));
+      }, 200);
     }
+  }
+
+  function resetErrors() {
+    setUserRoleUpdatePageState((prevState) => ({
+      ...prevState,
+      formErrors: {},
+    }));
+  }
+
+  function handleValueChange(field: string, value: any) {
+    setUserRoleUpdatePageState((prevState) => ({
+      ...prevState,
+      formValues: {
+        ...prevState.formValues,
+        [field]: value,
+      },
+    }));
+  }
+
+  if (!userRoleUpdatePageState.roleId) {
+    return null;
   }
 
   return (
@@ -75,28 +140,33 @@ export default function UpdateUserRole() {
               active: false,
             },
             {
-              title: `${name}`,
-              link: `/dashboard/users/roles/${roleId}`,
+              title: `${userRoleUpdatePageState.formValues.name}`,
+              link: `/dashboard/users/roles/${userRoleUpdatePageState.roleId}`,
               active: true,
             },
           ]}
         />
         <div className="row">
           <div className={`col-12 col-md-10 col-lg-6 mx-md-auto`}>
-            <Form title="Create User Role">
+            <Form title="Create User Role" loading={userRoleUpdatePageState.loading}>
               <FormBody>
                 <Input
                   type="text"
                   label="Name"
                   id="name"
-                  value={name}
-                  onValueChange={(v) => setName(v)}
-                  error={nameError}
+                  value={userRoleUpdatePageState.formValues.name}
+                  onValueChange={(v) => handleValueChange('name', v)}
+                  error={_.get(userRoleUpdatePageState.formErrors, 'name', null)}
+                  loading={userRoleUpdatePageState.loading}
                 />
               </FormBody>
               <FormAction>
-                <button className="btn btn-outline-primary btn-block" type="button" onClick={handleUpdateRole}>
-                  Update
+                <button
+                  className="btn btn-outline-primary btn-block"
+                  type="button"
+                  onClick={handleUpdateRole}
+                  disabled={userRoleUpdatePageState.loading}>
+                  {userRoleUpdatePageState.loading ? <Spinner /> : 'Update'}
                 </button>
               </FormAction>
             </Form>

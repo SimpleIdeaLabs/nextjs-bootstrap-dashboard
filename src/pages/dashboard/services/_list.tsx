@@ -4,8 +4,8 @@ import { useRouter } from 'next/router';
 import qs from 'querystring';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
-import { Breadcrumbs } from '../../../components/breadcrumbs';
-import Table, { TableBody, TableHeader, TablePagination } from '../../../components/tables';
+import { Breadcrumbs } from '../../../components/shared/breadcrumbs';
+import Table, { TableBody, TableHeader, TablePagination } from '../../../components/shared/tables';
 import { authenticatedRequest } from '../../../utils/axios-util';
 import { handleHttpRequestError } from '../../../utils/error-handling';
 import FilterModal from './_components/filter-modal';
@@ -263,7 +263,7 @@ export default function ServicesListPage() {
           <div className="col-lg-12">
             <Table title="Offered Services" isLoading={false}>
               <TableHeader>
-                <h4 className="card-title mb-0">Offered Services</h4>
+                <h4 className="card-title mb-0"></h4>
                 <div className="btn-group">
                   <button
                     id="btnServiceSearchModal"

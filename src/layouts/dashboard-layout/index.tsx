@@ -1,43 +1,40 @@
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import Accordion from './_components/accordion';
-import Cookies from 'js-cookie';
-import axios from 'axios';
+import Accordion from '../../components/shared/accordion';
 import { UserContextProvider } from '../../context/user-context';
-import _ from 'lodash';
-import Link from 'next/link';
-import React from 'react';
+import { User } from '../../models/user.model';
+import { UserService } from '../../services/user.service';
 
 const DashboardLayout = (props: any) => {
   const { children } = props;
   const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   useEffect(() => {
-    const fetchCurrentUser = async () => {
+    (async () => {
       try {
-        const token = Cookies.get('token');
-        const {
-          data: { data: responseData },
-        } = await axios.get(`${process.env.API_URL}/user/current`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setCurrentUser(responseData);
+        const { currentUser } = await UserService.getCurrentUser();
+        setCurrentUser(currentUser);
       } catch (error) {
-        setCurrentUser(null);
-        router.push('/');
+        redirectToLogin();
       }
-    };
-    fetchCurrentUser();
+    })();
   }, []);
 
-  const handleToggleSidebar = () => {
+  function handleToggleSidebar() {
     setIsSidebarOpen(!isSidebarOpen);
-  };
+  }
 
   function handleLogout() {
-    Cookies.remove('token');
+    UserService.logout(() => {
+      redirectToLogin();
+    });
+  }
+
+  function redirectToLogin() {
+    setCurrentUser(null);
     router.push('/');
   }
 
@@ -52,9 +49,12 @@ const DashboardLayout = (props: any) => {
                   className="bi bi-layout-sidebar navbar-toggler-icon d-flex justify-content-center align-items-center"
                   style={{ backgroundImage: 'none', fontSize: '1.5rem' }}></i>
               </button>
-              <a className="navbar-brand" href="#">
-                NextJS BS5
-              </a>
+              <div className="d-flex flex-row justify-content-center align-items-center">
+                <img src="/logo.png" style={{ width: 30, height: 30 }} className="rounded me-2" />
+                <a className="navbar-brand align-self-baseline align-self-end mb-0 pb-0" href="#">
+                  Nxt
+                </a>
+              </div>
               <button
                 className="navbar-toggler"
                 type="button"
@@ -94,7 +94,9 @@ const DashboardLayout = (props: any) => {
                       {currentUser && (
                         <img
                           className="rounded-circle shadow border"
-                          src={`${process.env.FILE_UPLOADS_URL}/profile-photos/${currentUser.profilePhoto}`}
+                          src={`${process.env.FILE_UPLOADS_URL}/profile-photos/${
+                            currentUser && currentUser.profilePhoto
+                          }`}
                           alt="Avatar"
                           style={{ width: '30px', height: '30px' }}
                         />
@@ -176,6 +178,26 @@ const DashboardLayout = (props: any) => {
                       ]}
                     />
                     <Accordion
+                      collapseId="patientsCollapse"
+                      linkHeadingId="patientLinkHeading"
+                      parentLink={{
+                        title: 'Patients',
+                        link: '/patients',
+                      }}
+                      subLinks={[
+                        {
+                          key: 'patients',
+                          title: 'Patients List',
+                          link: '/dashboard/patients/list?page=1&limit=10',
+                        },
+                        {
+                          key: 'patients-documents',
+                          title: 'Patient Documents',
+                          link: '/dashboard/patients/patient-documents/list?page=1&limit=10',
+                        },
+                      ]}
+                    />
+                    <Accordion
                       collapseId="authCollapse"
                       linkHeadingId="authLinkHeading"
                       parentLink={{
@@ -247,6 +269,11 @@ const DashboardLayout = (props: any) => {
                           key: 'health-service-details',
                           title: 'Health Service Details',
                           link: '/dashboard/settings/health-service-details',
+                        },
+                        {
+                          key: 'document-types',
+                          title: 'Document Types',
+                          link: '/dashboard/settings/document-types/list?page=1&limit=10',
                         },
                       ]}
                     />

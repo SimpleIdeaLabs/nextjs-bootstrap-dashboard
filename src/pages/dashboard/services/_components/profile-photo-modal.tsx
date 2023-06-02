@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import Form, { FormBody, FormAction } from '../../../../components/form';
+import Form, { FormBody, FormAction } from '../../../../components/shared/form';
 import { useDropzone } from 'react-dropzone';
 import { useMemo } from 'react';
 

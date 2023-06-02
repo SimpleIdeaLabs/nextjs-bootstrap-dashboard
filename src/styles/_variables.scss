@@ -33,6 +33,24 @@ $warning: $yellow !default;
 $danger: $red !default;
 $light: $gray-100 !default;
 $dark: $gray-900 !default;
+$ppp: #3F3351 !default;
+// tiles dark
+@for $i from 1 through 10 {
+    $shade: lighten($dark, ($i * 10));
+    $name: if($i==1, "dark", "bg-tiles-dark-#{$i * 100}");
+    .#{$name} {
+        background-color: $shade;
+    }
+}
+
+@for $i from 1 through 10 {
+    $shade: lighten($ppp, ($i * 10));
+    $name: if($i==1, "ppp", "bg-purple-#{$i * 100}");
+    .#{$name} {
+        background-color: $shade;
+    }
+}
+
 // primary shades
 @for $i from 1 through 10 {
     $shade: lighten($primary, ($i * 10));

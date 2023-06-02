@@ -1,41 +1,76 @@
-import Form, { FormAction, FormBody } from '../../../../components/form';
-import Input from '../../../../components/form/inputs';
-import { Breadcrumbs } from '../../../../components/breadcrumbs';
-import DashboardLayout from '../../../../layouts/dashboard-layout';
-import { useState } from 'react';
-import { handleHttpRequestError } from '../../../../utils/error-handling';
 import _ from 'lodash';
-import { authenticatedRequest } from '../../../../utils/axios-util';
 import { useRouter } from 'next/router';
+import { useState } from 'react';
 import { toast } from 'react-toastify';
+import { Breadcrumbs } from '../../../../components/shared/breadcrumbs';
+import Form, { FormAction, FormBody } from '../../../../components/shared/form';
+import Input from '../../../../components/shared/form/inputs';
+import Spinner from '../../../../components/shared/spinner';
+import DashboardLayout from '../../../../layouts/dashboard-layout';
+import { RoleService } from '../../../../services/role.service';
+import { handleHttpRequestError } from '../../../../utils/error-handling';
 
-export default function CreateSystemUser() {
+interface UserRoleCreatePageState {
+  formValues: {
+    name: '';
+  };
+  formErrors: any;
+  loading: boolean;
+}
+
+export default function UserRoleCreatePage() {
   const router = useRouter();
-  const [name, setName] = useState('');
-  const [nameError, setNameError] = useState('');
+  const [userRoleCreatePageState, setUserRoleCreatePageState] = useState<UserRoleCreatePageState>({
+    formValues: {
+      name: '',
+    },
+    formErrors: {},
+    loading: false,
+  });
 
+  /**
+   * Handle Create Role
+   */
   async function handleCreateRole() {
+    setUserRoleCreatePageState((prevState) => ({
+      ...prevState,
+      loading: true,
+    }));
     try {
-      const {
-        data: { status, message },
-      } = await authenticatedRequest.post('/role', {
-        name,
-      });
-      if (!status) {
-        throw new Error(message);
-      }
-      setName('');
-      setNameError('');
-      toast.success(`${name} role is created!`);
+      const { role } = await RoleService.createRole(userRoleCreatePageState.formValues);
+      toast.success(`${role.name} role is created!`);
       router.push('/dashboard/users/roles/list?page=1&limit=10');
     } catch (error: unknown) {
       handleHttpRequestError({
         error,
         badRequestCallback: (validationErrors: any) => {
-          setNameError(_.get(validationErrors, 'name', null));
+          const { name = null } = validationErrors;
+          setUserRoleCreatePageState((prevState) => ({
+            ...prevState,
+            formErrors: {
+              name,
+            },
+          }));
         },
       });
+    } finally {
+      setTimeout(() => {
+        setUserRoleCreatePageState((prevState) => ({
+          ...prevState,
+          loading: false,
+        }));
+      }, 200);
     }
+  }
+
+  function handleValueChange(field: string, value: any) {
+    setUserRoleCreatePageState((prevState) => ({
+      ...prevState,
+      formValues: {
+        ...prevState.formValues,
+        [field]: value,
+      },
+    }));
   }
 
   return (
@@ -68,14 +103,18 @@ export default function CreateSystemUser() {
                   type="text"
                   label="Name"
                   id="name"
-                  value={name}
-                  onValueChange={(v) => setName(v)}
-                  error={nameError}
+                  value={userRoleCreatePageState.formValues.name}
+                  onValueChange={(v) => handleValueChange('name', v)}
+                  error={_.get(userRoleCreatePageState.formErrors, 'name', null)}
                 />
               </FormBody>
               <FormAction>
-                <button className="btn btn-outline-primary btn-block" type="button" onClick={handleCreateRole}>
-                  Create
+                <button
+                  className="btn btn-outline-primary btn-block"
+                  type="button"
+                  onClick={handleCreateRole}
+                  disabled={userRoleCreatePageState.loading}>
+                  {userRoleCreatePageState.loading ? <Spinner /> : 'Create'}
                 </button>
               </FormAction>
             </Form>

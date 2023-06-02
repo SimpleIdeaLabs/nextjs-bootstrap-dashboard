@@ -1,5 +1,5 @@
-import Form, { FormBody, FormAction } from '../../../../components/form';
-import Input from '../../../../components/form/inputs';
+import Form, { FormBody, FormAction } from '../../../../components/shared/form';
+import Input from '../../../../components/shared/form/inputs';
 
 interface FilterModalProps {
   selectedCategory: any;
