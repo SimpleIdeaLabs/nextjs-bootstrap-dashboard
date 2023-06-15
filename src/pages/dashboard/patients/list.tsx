@@ -1,179 +1,102 @@
+import _ from 'lodash';
+import Head from 'next/head';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
+import SearchModal from '../../../components/dashboard/patients/search-modal';
 import { Breadcrumbs } from '../../../components/shared/breadcrumbs';
 import Table, { TableBody, TableHeader, TablePagination } from '../../../components/shared/tables';
+import { DEFAULT_PAGINATION, Pagination } from '../../../dtos/shared.dto';
 import DashboardLayout from '../../../layouts/dashboard-layout';
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
-import _ from 'lodash';
-import { authenticatedRequest } from '../../../utils/axios-util';
+import { Patient } from '../../../models/patient.model';
+import { PatientService } from '../../../services/patient.service';
 import { handleHttpRequestError } from '../../../utils/error-handling';
-import { toast } from 'react-toastify';
-import qs from 'querystring';
-import SearchModal from '../../../components/dashboard/patients/search-modal';
-import Head from 'next/head';
+
+interface PatientListPageState {
+  patients: Patient[];
+  search: {
+    firstName: string;
+    lastName: string;
+    controlNo: string;
+  };
+  pagination: Pagination;
+  loading: boolean;
+  displaySearchModal: boolean;
+}
 
 export default function PatientsList() {
   const router = useRouter();
-  const [patients, setPatients] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  /**
-   * Search Fields
-   */
-  const [qFirstName, setQFirstName] = useState(_.get(router, 'query.firstName', ''));
-  const [qLastName, setQLastName] = useState(_.get(router, 'query.lastName', ''));
-  const [qControlNo, setQControlNo] = useState(_.get(router, 'query.controlNo', ''));
-  const [displaySearchModal, setDisplaySearchModal] = useState(false);
-
-  /**
-   * Filter Fields
-   */
-  const [optionRoles, setOptionRoles] = useState([]);
-  const [displayFilterModal, setDisplayFilterModal] = useState(false);
-  const [filterRole, setFilterRole] = useState(router.query['role']);
-  const [selectedRoles, setSelectedRoles] = useState<any>([]);
-
-  /**
-   * Pagination Fields
-   */
-  const [pagination, setPagination] = useState({
-    page: 1,
-    limit: 10,
-    total: 0,
-    totalNumberOfPages: 0,
+  const [patientListPageState, setPatientListPageState] = useState<PatientListPageState>({
+    patients: [],
+    search: {
+      firstName: '',
+      lastName: '',
+      controlNo: '',
+    },
+    pagination: DEFAULT_PAGINATION,
+    loading: true,
+    displaySearchModal: false,
   });
 
   /**
    * Get Patients
    */
   useEffect(() => {
-    async function getPatients() {
-      if (!optionRoles.length) {
-        return;
-      }
+    if (!_.isEmpty(router.query)) {
+      const updatedPaginationState = {
+        page: parseInt(router.query.page as string),
+        limit: parseInt(router.query.limit as string),
+      };
 
-      let { page, limit, firstName: queryFirstName, lastName: queryLastName, controlNo: queryControlNo } = router.query;
+      const updatedSearchState = {
+        firstName: router.query.firstName as string,
+        lastName: router.query.lastName as string,
+        controlNo: router.query.controlNo as string,
+      };
 
-      if (queryFirstName) {
-        setQFirstName(queryFirstName);
-      } else {
-        queryFirstName = '';
-      }
+      setPatientListPageState((prevState) => ({
+        ...prevState,
+        search: updatedSearchState,
+        pagination: {
+          ...prevState.pagination,
+          ...updatedPaginationState,
+        },
+        loading: true,
+      }));
 
-      if (queryLastName) {
-        setQLastName(queryLastName);
-      } else {
-        queryLastName = '';
-      }
-
-      if (queryControlNo) {
-        setQControlNo(queryControlNo);
-      } else {
-        queryControlNo = '';
-      }
-
-      let queryFilterRole = ((): string[] => {
-        let qRole = router.query['role'];
-        if (Array.isArray(qRole) && qRole.length) {
-          return qRole as string[];
-        } else if (qRole) {
-          return [qRole as string];
-        }
-        return [];
-      })();
-      if (queryFilterRole.length) {
-        setFilterRole(queryFilterRole);
-        const _selectedRoles = optionRoles.filter((option: any) => {
-          return _.includes(queryFilterRole, option.value);
-        });
-        setSelectedRoles(_selectedRoles);
-      } else {
-        queryFilterRole = [];
-        setSelectedRoles([]);
-      }
-
-      if (page && limit) {
-        await fetchPatients({
-          _page: Number(page),
-          _limit: Number(limit),
-          queryFirstName: queryFirstName as string,
-          queryLastName: queryLastName as string,
-          queryControlNo: queryControlNo as string,
-          queryFilterRole: queryFilterRole as string[],
-        });
-        setTimeout(() => {
-          setLoading(false);
-        }, 500);
-      }
-    }
-    getPatients();
-  }, [router.query, optionRoles]);
-
-  /**
-   * Get Roles
-   */
-  useEffect(() => {
-    async function getRoles() {
-      await fetchRoles();
-    }
-    getRoles();
-  }, []);
-
-  async function fetchPatients(params: {
-    _page: number;
-    _limit: number;
-    queryFirstName: string;
-    queryLastName: string;
-    queryControlNo: string;
-    queryFilterRole: any[];
-  }) {
-    const { _page, _limit, queryFirstName, queryLastName, queryControlNo, queryFilterRole = [] } = params;
-    try {
-      let requestUrl = `/patient?page=${_page}&limit=${_limit}`;
-
-      if (queryFirstName || queryLastName || queryControlNo) {
-        if (queryFirstName) {
-          requestUrl = `${requestUrl}&firstName=${queryFirstName}`;
-        }
-        if (queryLastName) {
-          requestUrl = `${requestUrl}&lastName=${queryLastName}`;
-        }
-        if (queryControlNo) {
-          requestUrl = `${requestUrl}&controlNo=${queryControlNo}`;
-        }
-      }
-
-      if (queryFilterRole.length) {
-        const filterRoleQueryParams = queryFilterRole.map((f) => `role=${f}`).join('&');
-        requestUrl = `${requestUrl}&${filterRoleQueryParams}`;
-      }
-
-      const response = await authenticatedRequest.get(requestUrl);
-      const {
-        data: { data: responseData },
-      } = response;
-      setPagination({
-        ...responseData.pagination,
+      fetchPatients({
+        pagination: updatedPaginationState,
+        search: updatedSearchState,
       });
-      setPatients(responseData.patients);
+    }
+  }, [router.query]);
+
+  async function fetchPatients(params: { pagination: any; search: any }) {
+    try {
+      const { pagination, search } = params;
+      const { patients = [], pagination: paginationResponse } = await PatientService.getPatientList({
+        pagination,
+        search,
+      });
+
+      setPatientListPageState((prevState) => ({
+        ...prevState,
+        patients,
+        pagination: paginationResponse,
+      }));
     } catch (error) {
       handleHttpRequestError({
         error,
       });
+    } finally {
+      setTimeout(() => {
+        setPatientListPageState((prevState) => ({
+          ...prevState,
+          loading: false,
+        }));
+      }, 200);
     }
-  }
-
-  async function fetchRoles() {
-    const response = await authenticatedRequest.get(`/role?page=${1}&limit=${1000}`);
-    const {
-      data: { data: responseData },
-    } = response;
-    const { roles = [] } = responseData;
-    const optionRoles = roles.map((role: any) => ({
-      value: role.key,
-      label: role.name,
-    }));
-    setOptionRoles(optionRoles);
   }
 
   async function handleDelete(userId: number) {
@@ -211,18 +134,16 @@ export default function PatientsList() {
     );
   }
 
-  async function sendDeleteRequest(userId: number) {
+  async function sendDeleteRequest(patientId: number) {
     try {
-      await authenticatedRequest.delete(`/user/${userId}`);
-      toast.success('User successfully deleted!');
-      const { page, limit } = pagination;
-      await fetchPatients({
-        _page: Number(page),
-        _limit: Number(limit),
-        queryFirstName: qFirstName as string,
-        queryLastName: qLastName as string,
-        queryControlNo: qControlNo as string,
-        queryFilterRole: filterRole as string[],
+      await PatientService.deletePatient({
+        patientId,
+      });
+      toast.success('Patient successfully deleted!');
+      const { pagination, search } = patientListPageState;
+      fetchPatients({
+        pagination,
+        search,
       });
     } catch (error) {
       handleHttpRequestError({
@@ -242,36 +163,59 @@ export default function PatientsList() {
   }
 
   function handleOnSearch() {
-    setDisplaySearchModal(false);
+    displaySearchModal(false);
+    const { search } = patientListPageState;
+    const { firstName = '', lastName = '', controlNo = '' } = search;
     const query = {
       ...router.query,
       page: 1,
-      firstName: qFirstName,
-      lastName: qLastName,
-      controlNo: qControlNo,
-      role: selectedRoles.map((role: any) => role.value),
     } as any;
-    router.push(`/dashboard/patients/list?${qs.encode(query)}`);
-    router.push({
-      pathname: router.pathname,
-      query: { ...router.query, page: 1, firstName: qFirstName, lastName: qLastName, controlNo: qControlNo },
-    });
-  }
 
-  function handleOnClearSearch() {
-    setDisplaySearchModal(false);
-    setQFirstName('');
-    setQLastName('');
-    setQControlNo('');
-    const query: any = { ...router.query, page: 1 };
-    delete query.firstName;
-    delete query.lastName;
-    delete query.controlNo;
+    if (firstName) {
+      query.firstName = firstName;
+    }
+
+    if (lastName) {
+      query.lastName = lastName;
+    }
+
+    if (controlNo) {
+      query.controlNo = controlNo;
+    }
 
     router.push({
       pathname: router.pathname,
       query,
     });
+  }
+
+  function handleOnClearSearch() {
+    displaySearchModal(false);
+    const query: any = { ...router.query, page: 1 };
+    delete query.firstName;
+    delete query.lastName;
+    delete query.controlNo;
+    router.push({
+      pathname: router.pathname,
+      query,
+    });
+  }
+
+  function displaySearchModal(display: boolean) {
+    setPatientListPageState((prevState) => ({
+      ...prevState,
+      displaySearchModal: display,
+    }));
+  }
+
+  function handleSearchValueChange(field: string, value: any) {
+    setPatientListPageState((prevState) => ({
+      ...prevState,
+      search: {
+        ...prevState.search,
+        [field]: value,
+      },
+    }));
   }
 
   return (
@@ -296,14 +240,14 @@ export default function PatientsList() {
         />
         <div className="row">
           <div className="col-lg-12">
-            <Table title="Patients" isLoading={loading}>
+            <Table title="Patients" isLoading={patientListPageState.loading}>
               <TableHeader>
                 <h4 className="card-title mb-0"></h4>
                 <div className="btn-group">
                   <button
                     id="btnPatientSearchModal"
                     className="btn btn-outline-primary"
-                    onClick={() => setDisplaySearchModal(true)}>
+                    onClick={() => displaySearchModal(true)}>
                     <i className="bi bi-search"></i> Search
                   </button>
                   <Link href="/dashboard/patients/demographics" className="btn btn-outline-success">
@@ -323,7 +267,7 @@ export default function PatientsList() {
                   </tr>
                 </thead>
                 <tbody className="table-group-divider">
-                  {patients.map((patient: any) => {
+                  {patientListPageState.patients.map((patient: any) => {
                     return (
                       <tr key={patient.id}>
                         <td scope="row">
@@ -369,21 +313,21 @@ export default function PatientsList() {
                   })}
                 </tbody>
               </TableBody>
-              <TablePagination pagination={pagination} goToPage={goToPage} />
+              <TablePagination pagination={patientListPageState.pagination} goToPage={goToPage} />
             </Table>
           </div>
         </div>
       </div>
       {/* Modals */}
       <SearchModal
-        firstName={qFirstName as string}
-        onChangeFirstName={setQFirstName}
-        lastName={qLastName as string}
-        onChangeLastName={setQLastName}
-        controlNo={qControlNo as string}
-        onChangeControlNo={setQControlNo}
-        showModal={displaySearchModal}
-        onClose={() => setDisplaySearchModal(false)}
+        firstName={patientListPageState.search.firstName}
+        onChangeFirstName={(v) => handleSearchValueChange('firstName', v)}
+        lastName={patientListPageState.search.lastName}
+        onChangeLastName={(v) => handleSearchValueChange('lastName', v)}
+        controlNo={patientListPageState.search.controlNo}
+        onChangeControlNo={(v) => handleSearchValueChange('controlNo', v)}
+        showModal={patientListPageState.displaySearchModal}
+        onClose={() => displaySearchModal(false)}
         handleOnSearch={handleOnSearch}
         handleOnClearSearch={handleOnClearSearch}
       />

@@ -2,12 +2,12 @@ import _, { set } from 'lodash';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
-import { Breadcrumbs } from '../../../../../components/shared/breadcrumbs';
-import Form, { FormAction, FormBody } from '../../../../../components/shared/form';
-import Input from '../../../../../components/shared/form/inputs';
-import { authenticatedRequest } from '../../../../../utils/axios-util';
-import { handleHttpRequestError } from '../../../../../utils/error-handling';
-import { FileTypes } from '../../../../../constants/file-types.constants';
+import { Breadcrumbs } from '../../../shared/breadcrumbs';
+import Form, { FormAction, FormBody } from '../../../shared/form';
+import Input from '../../../shared/form/inputs';
+import { authenticatedRequest } from '../../../../utils/axios-util';
+import { handleHttpRequestError } from '../../../../utils/error-handling';
+import { FileTypes } from '../../../../constants/file-types.constants';
 
 interface DocumentTypesFormProps {
   mode: 'create' | 'edit';
@@ -15,18 +15,34 @@ interface DocumentTypesFormProps {
   handleOnFormSubmit: (payload: any) => void;
 }
 
+export interface DocumentTypesFormValue {
+  name: string;
+  fileTypes: any[];
+}
+
+interface DocumentTypesFormState {
+  formValues: DocumentTypesFormValue;
+  formErrors: any;
+  optionFileTypes: any[];
+  loading: boolean;
+}
+
 export default function DocumentTypesForm(props: DocumentTypesFormProps) {
   const router = useRouter();
-  const { documentTypeId = null } = props;
-  const [name, setName] = useState('');
-  const [nameError, setNameError] = useState('');
-  const [optionFileTypes, setOptionFileTypes] = useState<any[]>([]);
-  const [fileTypes, setFileTypes] = useState<any[]>([]);
-  const [fileTypesError, setFileTypesError] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const { mode } = props;
+  const { documentTypeId = null, mode } = props;
+  const [documentTypesFormState, setDocumentTypesFormState] = useState<DocumentTypesFormState>({
+    formValues: {
+      name: '',
+      fileTypes: [],
+    },
+    formErrors: {},
+    optionFileTypes: [],
+    loading: false,
+  });
 
   const formProperties = (function () {
+    const { formValues } = documentTypesFormState;
+    const { name } = formValues;
     if (mode === 'create') {
       return {
         formLabel: 'Create Document Type',
@@ -55,29 +71,38 @@ export default function DocumentTypesForm(props: DocumentTypesFormProps) {
   })();
 
   useEffect(() => {
+    fetchSupportedFileTypes();
+  }, []);
+
+  useEffect(() => {
     async function getData() {
-      /**
-       * Fetch Service Data
-       * If mode is on Edit
-       */
-      if (mode === 'edit' && documentTypeId) {
+      setDocumentTypesFormState((prevState) => ({
+        ...prevState,
+        loading: true,
+      }));
+      if (mode === 'edit' && documentTypeId && documentTypesFormState.optionFileTypes.length > 0) {
         await fetchDocumentTypes(Number(documentTypeId as string));
       }
-      await fetchSupportedFileTypes();
-      setIsLoading(false);
+      setDocumentTypesFormState((prevState) => ({
+        ...prevState,
+        loading: false,
+      }));
     }
     getData();
-  }, [mode, documentTypeId, isLoading]);
+  }, [mode, documentTypeId, documentTypesFormState.optionFileTypes]);
 
   /**
    * Fetch Categories
    */
   async function fetchSupportedFileTypes() {
-    const _optionFileTypes = FileTypes.map((fileType: any) => ({
+    const optionFileTypes = FileTypes.map((fileType: any) => ({
       value: fileType.id,
       label: fileType.name,
     }));
-    setOptionFileTypes(_optionFileTypes);
+    setDocumentTypesFormState((prevState) => ({
+      ...prevState,
+      optionFileTypes,
+    }));
   }
 
   /**
@@ -90,7 +115,6 @@ export default function DocumentTypesForm(props: DocumentTypesFormProps) {
     } = response;
     const { documentType = null } = responseData;
     if (documentType) {
-      setName(_.get(documentType, 'name', ''));
       const _fileTypeIds = _.get(documentType, 'fileTypes', []);
       const _fileTypes = _.filter(FileTypes, (fileType) => {
         return _.includes(_fileTypeIds, `${fileType.id}`);
@@ -99,7 +123,14 @@ export default function DocumentTypesForm(props: DocumentTypesFormProps) {
         value: _ft.id,
         label: _ft.name,
       }));
-      setFileTypes(_selectedFileTypes);
+      setDocumentTypesFormState((prevState) => ({
+        ...prevState,
+        formValues: {
+          ...prevState.formValues,
+          name: _.get(documentType, 'name', ''),
+          fileTypes: _selectedFileTypes,
+        },
+      }));
     }
   }
 
@@ -108,6 +139,8 @@ export default function DocumentTypesForm(props: DocumentTypesFormProps) {
    */
   async function _handleOnformSubmit() {
     const { handleOnFormSubmit } = props;
+    const { formValues } = documentTypesFormState;
+    const { name, fileTypes } = formValues;
     try {
       await handleOnFormSubmit({
         name,
@@ -120,24 +153,38 @@ export default function DocumentTypesForm(props: DocumentTypesFormProps) {
       handleHttpRequestError({
         error,
         badRequestCallback: (validationErrors: any) => {
-          setNameError(_.get(validationErrors, 'name', null));
-          setFileTypesError(_.get(validationErrors, 'fileTypes', null));
+          setDocumentTypesFormState((prevState) => ({
+            ...prevState,
+            formErrors: {
+              ...prevState.formErrors,
+              name: _.get(validationErrors, 'name', null),
+              fileTypes: _.get(validationErrors, 'fileTypes', null),
+            },
+          }));
         },
       });
     }
   }
 
   function resetErrors() {
-    setNameError('');
+    setDocumentTypesFormState((prevState) => ({
+      ...prevState,
+      formErrors: {},
+    }));
   }
 
-  if (isLoading) {
-    return null;
+  function handleValueChange(field: string, value: any) {
+    setDocumentTypesFormState((prevState) => ({
+      ...prevState,
+      formValues: {
+        ...prevState.formValues,
+        [field]: value,
+      },
+    }));
   }
 
-  if (mode === 'edit' && !fileTypes.length) {
-    return null;
-  }
+  const { formValues, formErrors, loading, optionFileTypes = [] } = documentTypesFormState;
+  const { name, fileTypes } = formValues;
 
   return (
     <>
@@ -166,10 +213,10 @@ export default function DocumentTypesForm(props: DocumentTypesFormProps) {
                   label="Name"
                   id={'name'}
                   value={name}
-                  onValueChange={(v) => setName(v)}
-                  error={nameError}
+                  onValueChange={(v) => handleValueChange('name', v)}
+                  error={_.get(formErrors, 'name', null)}
                 />
-                {!isLoading && optionFileTypes && optionFileTypes.length > 0 ? (
+                {!loading && optionFileTypes && optionFileTypes.length > 0 ? (
                   <Input
                     multiSelect
                     type="select"
@@ -177,8 +224,8 @@ export default function DocumentTypesForm(props: DocumentTypesFormProps) {
                     value={fileTypes}
                     id={'categories'}
                     options={optionFileTypes}
-                    onValueChange={(fileTypeIds) => setFileTypes(fileTypeIds)}
-                    error={fileTypesError}
+                    onValueChange={(fileTypeIds) => handleValueChange('fileTypes', fileTypeIds)}
+                    error={_.get(formErrors, 'fileTypes', null)}
                   />
                 ) : null}
               </FormBody>

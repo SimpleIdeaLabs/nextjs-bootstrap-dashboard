@@ -1,5 +1,5 @@
-import Form, { FormBody, FormAction } from '../../../../../components/shared/form';
-import Input from '../../../../../components/shared/form/inputs';
+import Form, { FormBody, FormAction } from '../../../shared/form';
+import Input from '../../../shared/form/inputs';
 
 interface SearchModalProps {
   name: string;

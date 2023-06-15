@@ -1,11 +1,12 @@
 import _ from 'lodash';
 import { useRouter } from 'next/router';
 import { authenticatedRequest } from '../../../../utils/axios-util';
-import DemographicsForm from '../../../../components/dashboard/patients/demographics-form';
+import DemographicsForm, {
+  PatientDemographicsValue,
+} from '../../../../components/dashboard/patients/demographics-form';
 import { useEffect, useState } from 'react';
 import { Patient } from '../../../../models/patient.model';
 import { PatientService } from '../../../../services/patient.service';
-import { PatientDemographicsDataParams } from '../../../../dtos/patient.dto';
 
 export default function UpdatePatientDemographics() {
   const router = useRouter();
@@ -37,40 +38,35 @@ export default function UpdatePatientDemographics() {
     }
   }, [router, patientId]);
 
-  async function handleUpdateDemographics(params: PatientDemographicsDataParams) {
-    const { payload, onError, onSuccess } = params;
-    try {
-      const { firstName, middleName, lastName, birthDate, email, contactNo, profilePhoto } = payload;
+  async function handleUpdateDemographics(params: PatientDemographicsValue, onSuccess: (patientId?: number) => void) {
+    const { firstName, middleName, lastName, birthDate, email, contactNo, profilePhoto } = params;
 
-      const formData = new FormData();
-      formData.append('firstName', firstName);
-      formData.append('middleName', middleName);
-      formData.append('lastName', lastName);
-      formData.append('birthDate', birthDate);
-      formData.append('email', email);
-      formData.append('contactNo', contactNo);
+    const formData = new FormData();
+    formData.append('firstName', firstName);
+    formData.append('middleName', middleName);
+    formData.append('lastName', lastName);
+    formData.append('birthDate', birthDate);
+    formData.append('email', email);
+    formData.append('contactNo', contactNo);
 
-      if (profilePhoto.path) {
-        formData.append('profilePhoto', profilePhoto);
-      }
+    if (profilePhoto.path) {
+      formData.append('profilePhoto', profilePhoto);
+    }
 
-      const config = {
-        headers: {
-          'content-type': 'multipart/form-data',
-        },
-      };
+    const config = {
+      headers: {
+        'content-type': 'multipart/form-data',
+      },
+    };
 
-      const {
-        data: { status, message },
-      } = await authenticatedRequest.patch(`/patient/${patientId}/demographics`, formData, config);
-      if (!status) {
-        onError(new Error(message));
-      }
-      if (patientId) {
-        onSuccess(patientId);
-      }
-    } catch (error) {
-      onError(error);
+    const {
+      data: { status, message },
+    } = await authenticatedRequest.patch(`/patient/${patientId}/demographics`, formData, config);
+    if (!status) {
+      throw new Error(message);
+    }
+    if (patientId) {
+      onSuccess(patientId);
     }
   }
 

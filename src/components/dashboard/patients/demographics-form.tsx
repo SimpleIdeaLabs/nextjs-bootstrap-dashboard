@@ -11,34 +11,49 @@ import Form, { FormBody, FormAction } from '../../shared/form';
 import Input from '../../shared/form/inputs';
 import ProfilePhotoModal from './profile-photo-modal';
 import { Patient } from '../../../models/patient.model';
-import { PatientDemographicsDataParams } from '../../../dtos/patient.dto';
+
+export interface PatientDemographicsValue {
+  profilePhoto: any;
+  firstName: string;
+  middleName: string;
+  lastName: string;
+  birthDate: string;
+  email: string;
+  contactNo: string;
+}
 
 interface SystemUserFormProps {
   mode: 'create' | 'edit';
   patient: Patient | null;
   loading: boolean;
-  handleOnFormSubmit: (params: PatientDemographicsDataParams) => void;
+  handleOnFormSubmit: (params: PatientDemographicsValue, onSuccess: (patientId?: number) => void) => void;
+}
+
+interface PatientDemographicsFormState {
+  formValues: PatientDemographicsValue;
+  formErrors: any;
+  loading: boolean;
+  displayProfilePhotoModal: boolean;
 }
 
 export default function DemographicsForm(props: SystemUserFormProps) {
   const router = useRouter();
   const { loading = true, patient = null, mode } = props;
   const patientId = _.get(props, 'patient.id', null);
-  const [profilePhoto, setProfilePhoto] = useState<any>(null);
-  const [profilePhotoError, setProfilePhotoError] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [firstNameError, setFirstNameError] = useState('');
-  const [middleName, setMiddleName] = useState('');
-  const [middleNameError, setMiddleNameError] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [lastNameError, setLastNameError] = useState('');
-  const [birthDate, setBirthDate] = useState('');
-  const [birthDateError, setBirthDateError] = useState('');
-  const [email, setEmail] = useState('');
-  const [emailError, setEmailError] = useState('');
-  const [contactNo, setContactNo] = useState('');
-  const [contactNoError, setContactNoError] = useState('');
-  const [displayProfilePhotoModal, setDisplayProfilePhotoModal] = useState(false);
+  const [demographicsFormState, setDemographicsFormState] = useState<PatientDemographicsFormState>({
+    formValues: {
+      profilePhoto: '',
+      firstName: '',
+      middleName: '',
+      lastName: '',
+      birthDate: '',
+      email: '',
+      contactNo: '',
+    },
+    formErrors: {},
+    displayProfilePhotoModal: false,
+    loading: false,
+  });
 
   const formProperties = (function (_patient: any) {
     if (mode !== 'create') {
@@ -68,18 +83,27 @@ export default function DemographicsForm(props: SystemUserFormProps) {
       try {
         if (patient) {
           const rawProfilePhoto = _.get(patient, 'profilePhoto', '');
+          let profilePhoto: any = null;
           if (rawProfilePhoto) {
             const profilePhotoUrl = `${process.env.FILE_UPLOADS_URL}/patient/photos/${rawProfilePhoto}`;
             const profilePhotoBlob = await fetch(profilePhotoUrl).then((response) => response.blob());
             const profilePhotoObjectURL = URL.createObjectURL(profilePhotoBlob);
-            setProfilePhoto({ preview: profilePhotoObjectURL });
+            profilePhoto = { preview: profilePhotoObjectURL };
           }
-          setFirstName(_.get(patient, 'firstName', ''));
-          setMiddleName(_.get(patient, 'middleName', ''));
-          setLastName(_.get(patient, 'lastName', ''));
-          setBirthDate(_.get(patient, 'birthDate', ''));
-          setEmail(_.get(patient, 'email', ''));
-          setContactNo(_.get(patient, 'contactNo', ''));
+
+          setDemographicsFormState((prevState) => ({
+            ...prevState,
+            formValues: {
+              ...prevState.formValues,
+              profilePhoto,
+              firstName: _.get(patient, 'firstName', ''),
+              middleName: _.get(patient, 'middleName', ''),
+              lastName: _.get(patient, 'lastName', ''),
+              birthDate: _.get(patient, 'birthDate', ''),
+              email: _.get(patient, 'email', ''),
+              contactNo: _.get(patient, 'contactNo', ''),
+            },
+          }));
         }
       } catch (error) {
         toast.error('Oops something went wrong...');
@@ -96,44 +120,97 @@ export default function DemographicsForm(props: SystemUserFormProps) {
    */
   async function _handleOnformSubmit() {
     const { handleOnFormSubmit } = props;
-    await handleOnFormSubmit({
-      payload: {
-        firstName,
-        middleName,
-        lastName,
-        birthDate,
-        email,
-        contactNo,
-        profilePhoto,
-      },
-      onSuccess: (_patientId: any) => {
-        if (_patientId) {
+    const { formValues } = demographicsFormState;
+    const {
+      profilePhoto = '',
+      firstName = '',
+      middleName = '',
+      lastName = '',
+      birthDate = '',
+      email = '',
+      contactNo = '',
+    } = formValues;
+
+    try {
+      setDemographicsFormState((prevState) => ({
+        ...prevState,
+        loading: true,
+      }));
+      await handleOnFormSubmit(
+        {
+          firstName,
+          middleName,
+          lastName,
+          birthDate,
+          email,
+          contactNo,
+          profilePhoto,
+        },
+        (patientId) => {
           toast.success("Successfully updated patient's demographics data.");
-          router.push(`/dashboard/patients/additional-data/${_patientId}`);
+          router.push(`/dashboard/patients/additional-data/${patientId}`);
         }
+      );
+    } catch (error: unknown) {
+      handleHttpRequestError({
+        error,
+        badRequestCallback: (validationErrors: any) => {
+          setDemographicsFormState((prevState) => ({
+            ...prevState,
+            formErrors: {
+              profilePhoto: _.get(validationErrors, 'profilePhoto', null),
+              firstName: _.get(validationErrors, 'firstName', null),
+              lastName: _.get(validationErrors, 'lastName', null),
+              birthDate: _.get(validationErrors, 'birthDate', null),
+              email: _.get(validationErrors, 'email', null),
+              contactNo: _.get(validationErrors, 'contactNo', null),
+            },
+          }));
+        },
+      });
+    } finally {
+      setDemographicsFormState((prevState) => ({
+        ...prevState,
+        loading: false,
+      }));
+    }
+  }
+
+  function handleValueChange(field: string, value: any) {
+    setDemographicsFormState((prevState) => ({
+      ...prevState,
+      formValues: {
+        ...prevState.formValues,
+        [field]: value,
       },
-      onError: (error: unknown) => {
-        handleHttpRequestError({
-          error,
-          badRequestCallback: (validationErrors: any) => {
-            setProfilePhotoError(_.get(validationErrors, 'profilePhoto', null));
-            setFirstNameError(_.get(validationErrors, 'firstName', null));
-            setLastNameError(_.get(validationErrors, 'lastName', null));
-            setBirthDateError(_.get(validationErrors, 'birthDate', null));
-            setEmailError(_.get(validationErrors, 'email', null));
-            setContactNoError(_.get(validationErrors, 'contactNo', null));
-          },
-        });
-      },
-    });
+    }));
   }
 
   function resetErrors() {
-    setProfilePhotoError('');
-    setFirstNameError('');
-    setLastNameError('');
-    setEmailError('');
+    setDemographicsFormState((prevState) => ({
+      ...prevState,
+      formErrors: {},
+    }));
   }
+
+  function displayPhotoModal(display: boolean) {
+    setDemographicsFormState((prevState) => ({
+      ...prevState,
+      displayProfilePhotoModal: display,
+    }));
+  }
+
+  const { formValues, formErrors } = demographicsFormState;
+  const {
+    profilePhoto = '',
+    firstName = '',
+    middleName = '',
+    lastName = '',
+    birthDate = '',
+    email = '',
+    contactNo = '',
+  } = formValues;
+  const profilePhotoError = _.get(formErrors, 'profilePhoto', null);
 
   return (
     <DashboardLayout>
@@ -165,7 +242,7 @@ export default function DemographicsForm(props: SystemUserFormProps) {
                     profilePhotoError ? 'border border-danger' : ''
                   }`}
                   alt="Avatar"
-                  onClick={() => setDisplayProfilePhotoModal(true)}
+                  onClick={() => displayPhotoModal(true)}
                   onLoad={() => {
                     profilePhoto && URL.revokeObjectURL((profilePhoto as any).preview);
                   }}
@@ -178,8 +255,8 @@ export default function DemographicsForm(props: SystemUserFormProps) {
                 label="First Name"
                 id={'firstName'}
                 value={firstName}
-                onValueChange={(v) => setFirstName(v)}
-                error={firstNameError}
+                onValueChange={(v) => handleValueChange('firstName', v)}
+                error={_.get(formErrors, 'firstName', null)}
                 loading={loading}
               />
               <Input
@@ -187,8 +264,8 @@ export default function DemographicsForm(props: SystemUserFormProps) {
                 label="Middle Name"
                 id={'middleName'}
                 value={middleName}
-                onValueChange={(v) => setMiddleName(v)}
-                error={middleNameError}
+                onValueChange={(v) => handleValueChange('middleName', v)}
+                error={_.get(formErrors, 'middleName', null)}
                 loading={loading}
               />
               <Input
@@ -196,8 +273,8 @@ export default function DemographicsForm(props: SystemUserFormProps) {
                 label="Last Name"
                 id={'lastName'}
                 value={lastName}
-                onValueChange={(v) => setLastName(v)}
-                error={lastNameError}
+                onValueChange={(v) => handleValueChange('lastName', v)}
+                error={_.get(formErrors, 'lastName', null)}
                 loading={loading}
               />
               <Input
@@ -205,8 +282,8 @@ export default function DemographicsForm(props: SystemUserFormProps) {
                 label="Birth Date"
                 id={'birthDate'}
                 value={birthDate}
-                onValueChange={(v) => setBirthDate(v)}
-                error={birthDateError}
+                onValueChange={(v) => handleValueChange('birthDate', v)}
+                error={_.get(formErrors, 'birthDate', null)}
                 loading={loading}
               />
               <Input
@@ -214,8 +291,8 @@ export default function DemographicsForm(props: SystemUserFormProps) {
                 label="Email"
                 id={'email'}
                 value={email}
-                onValueChange={(v) => setEmail(v)}
-                error={emailError}
+                onValueChange={(v) => handleValueChange('email', v)}
+                error={_.get(formErrors, 'email', null)}
                 loading={loading}
               />
               <Input
@@ -223,8 +300,8 @@ export default function DemographicsForm(props: SystemUserFormProps) {
                 label="Contact No"
                 id={'contactNo'}
                 value={contactNo}
-                onValueChange={(v) => setContactNo(v)}
-                error={contactNoError}
+                onValueChange={(v) => handleValueChange('contactNo', v)}
+                error={_.get(formErrors, 'contactNo', null)}
                 loading={loading}
               />
             </FormBody>
@@ -237,10 +314,10 @@ export default function DemographicsForm(props: SystemUserFormProps) {
         </PatientFormLayout>
       </div>
       <ProfilePhotoModal
-        showModal={displayProfilePhotoModal}
-        onClose={() => setDisplayProfilePhotoModal(false)}
+        showModal={demographicsFormState.displayProfilePhotoModal}
+        onClose={() => displayPhotoModal(false)}
         profilePhoto={profilePhoto}
-        onUpdateProfilePhoto={(newPhoto) => setProfilePhoto(newPhoto)}
+        onUpdateProfilePhoto={(newPhoto) => handleValueChange('profilePhoto', newPhoto)}
       />
     </DashboardLayout>
   );

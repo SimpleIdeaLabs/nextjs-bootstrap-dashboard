@@ -1,18 +1,26 @@
-import Form, { FormBody, FormAction } from '../../../../components/shared/form';
-import Input from '../../../../components/shared/form/inputs';
+import Form, { FormBody, FormAction } from '../../shared/form';
+import Input from '../../shared/form/inputs';
 
-interface SearchModalProps {
-  name: string;
-  onChangeName: (v: string) => void;
+interface FilterModalProps {
+  selectedCategory: any;
+  optionCategories: any[];
   showModal: boolean;
   onClose: () => void;
-  handleOnSearch: () => void;
-  handleOnClearSearch: () => void;
+  handleOnFilter: () => void;
+  handleOnChange: (value: any) => void;
+  handleOnClearFilter: () => void;
 }
 
-const SearchModal = (props: SearchModalProps) => {
-  const { name, onChangeName, showModal, onClose, handleOnSearch, handleOnClearSearch } = props;
-
+const FilterModal = (props: FilterModalProps) => {
+  const {
+    selectedCategory,
+    showModal,
+    onClose,
+    optionCategories,
+    handleOnFilter,
+    handleOnClearFilter,
+    handleOnChange,
+  } = props;
   return (
     <>
       <div
@@ -23,7 +31,9 @@ const SearchModal = (props: SearchModalProps) => {
         <div className="modal-dialog" role="document">
           <div className="modal-content">
             <div className="modal-header">
-              <h5 className="modal-title">Search</h5>
+              <p className="modal-title">
+                <h5>Filter</h5>
+              </p>
               <button
                 type="button"
                 className="btn-close"
@@ -35,27 +45,26 @@ const SearchModal = (props: SearchModalProps) => {
               <Form>
                 <FormBody>
                   <Input
-                    type="text"
-                    label="Name"
-                    id="name"
-                    value={name}
-                    onValueChange={(v) => onChangeName(v)}
+                    type="select"
+                    label="Category"
+                    value={selectedCategory}
+                    id={'category'}
+                    options={optionCategories}
+                    onValueChange={(roles) => handleOnChange(roles)}
                     error={null}
                   />
                 </FormBody>
                 <FormAction>
                   <div className="d-grid">
-                    <button
-                      className="btn btn-outline-primary btn-block mb-3"
-                      type="button"
-                      onClick={() => handleOnSearch()}>
-                      Search
+                    <button className="btn btn-outline-primary btn-block mb-3" onClick={() => handleOnFilter()}>
+                      Filter
                     </button>
                     <button
                       className="btn btn-outline-danger btn-block"
                       type="button"
                       onClick={() => {
-                        handleOnClearSearch();
+                        handleOnChange(null);
+                        handleOnClearFilter();
                       }}>
                       Clear Search
                     </button>
@@ -74,4 +83,4 @@ const SearchModal = (props: SearchModalProps) => {
   );
 };
 
-export default SearchModal;
+export default FilterModal;

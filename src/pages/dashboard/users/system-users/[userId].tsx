@@ -1,44 +1,28 @@
 import _ from 'lodash';
 import { useRouter } from 'next/router';
 import { authenticatedRequest } from '../../../../utils/axios-util';
-import SystemUserForm from '../../../../components/dashboard/users/system-users/system-user-form';
 import { useEffect, useState } from 'react';
+import SystemUserForm from '../../../../components/dashboard/users/system-users/system-user-form';
 
 interface UpdateSystemUserState {
   userId: null | number;
-  optionRoles: any[];
-  formValues: {
-    profilePhoto: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    roles: any[];
-    password: string;
-    confirmPassword: string;
-  };
-  formErrors: any;
-  loading: boolean;
 }
 
 export default function UpdateSystemUser() {
   const router = useRouter();
   const [updateSystemUserState, setUpdateSystemUserState] = useState<UpdateSystemUserState>({
     userId: null,
-    optionRoles: [],
-    formValues: {
-      profilePhoto: '',
-      firstName: '',
-      lastName: '',
-      email: '',
-      roles: [],
-      password: '',
-      confirmPassword: '',
-    },
-    formErrors: {},
-    loading: true,
   });
 
-  useEffect(() => {}, [router.query]);
+  useEffect(() => {
+    if (!_.isEmpty(router.query)) {
+      const userId = parseInt(router.query.userId as string);
+      setUpdateSystemUserState((prevState) => ({
+        ...prevState,
+        userId,
+      }));
+    }
+  }, [router.query]);
 
   async function handleUpdateUser(payload: {
     firstName: string;
@@ -49,6 +33,7 @@ export default function UpdateSystemUser() {
     roles: any[];
     profilePhoto: any;
   }) {
+    const { userId } = updateSystemUserState;
     const { firstName, lastName, email, password, confirmPassword, roles, profilePhoto } = payload;
     const formData = new FormData();
     formData.append('firstName', firstName);
@@ -81,5 +66,6 @@ export default function UpdateSystemUser() {
     }
   }
 
+  const { userId } = updateSystemUserState;
   return <SystemUserForm mode="edit" handleOnFormSubmit={handleUpdateUser} userId={userId} />;
 }

@@ -4,10 +4,10 @@ import { UserContext } from '../../../context/user-context';
 import { authenticatedRequest } from '../../../utils/axios-util';
 import Form, { FormBody, FormAction } from '../../../components/shared/form';
 import Input from '../../../components/shared/form/inputs';
-import ProfilePhotoModal from '../users/system-users/_components/profile-photo-modal';
 import { handleHttpRequestError } from '../../../utils/error-handling';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/router';
+import ProfilePhotoModal from '../../../components/dashboard/users/system-users/profile-photo-modal';
 
 function ProfilePage() {
   const router = useRouter();

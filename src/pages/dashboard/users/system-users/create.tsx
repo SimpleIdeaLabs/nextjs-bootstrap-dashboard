@@ -12,7 +12,6 @@ export default function CreateSystemUser() {
     profilePhoto: any;
   }) {
     const { firstName, lastName, email, password, confirmPassword, roles, profilePhoto } = payload;
-
     const formData = new FormData();
     formData.append('firstName', firstName);
     formData.append('lastName', lastName);

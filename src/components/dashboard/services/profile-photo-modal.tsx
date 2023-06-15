@@ -1,7 +1,5 @@
-import Link from 'next/link';
-import Form, { FormBody, FormAction } from '../../../../components/shared/form';
 import { useDropzone } from 'react-dropzone';
-import { useMemo } from 'react';
+import Form, { FormAction, FormBody } from '../../shared/form';
 
 interface ProfilePhotoModalProps {
   profilePhoto: any;
